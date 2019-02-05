@@ -1,0 +1,7 @@
+All tests were run on a PC with the following characteristics:
+• OS: Microsoft Windows 10 Home
+• System Type: x64-based PC
+• CPU: Intel(R) Core(TM) i7-6700HQ CPU @ 2.60GHz 2.59 GHz,
+• RAM: 8 GB
+• GPU: NVIDIA GeForce GTX 1060
+– Dedicated video memory: 6 GB GDDR5x
