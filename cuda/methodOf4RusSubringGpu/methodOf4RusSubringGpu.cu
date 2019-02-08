@@ -152,10 +152,10 @@ int wrapper_methodOf4Rus_subring(uint32_t *a, uint32_t *b, uint32_t *c, Tables t
     dim3 dimBlock_table_kernel(BLOCK_SIZE_COL,BLOCK_SIZE_ROW);
     
     dim3 dimGrid_table_n   ((tables.cols_n + BLOCK_SIZE_COL-1)/BLOCK_SIZE_COL,
-                           (rows+BLOCK_SIZE_ROW * K -1)/BLOCK_SIZE_ROW * K);
+                           (rows + BLOCK_SIZE_ROW * K -1)/(BLOCK_SIZE_ROW * K));
     
     dim3 dimGrid_table_last((tables.cols_last + BLOCK_SIZE_COL-1)/BLOCK_SIZE_COL,
-                           (rows+BLOCK_SIZE_ROW * K -1)/BLOCK_SIZE_ROW * K);
+                           (rows + BLOCK_SIZE_ROW * K -1)/(BLOCK_SIZE_ROW * K));
     
     //setup configuration for mul kernel
     dim3 dimBlock_m4ri(BLOCK_SIZE_COL,BLOCK_SIZE_ROW);

@@ -27,10 +27,10 @@ struct Tables {
         num_tables = rows / K ; // rows always :32
         num_launches = cols / max_cols;
         if(cols_last != 0) {
-            table_last = allocate_tables(num_tables,rows,cols_last);
+            table_last = allocate_tables(num_tables,256,cols_last);
         }
         if(num_launches != 0) {            
-            table_n = allocate_tables(num_tables,rows,cols_n);
+            table_n = allocate_tables(num_tables,256,cols_n);
         }		
     }
     void free() {
