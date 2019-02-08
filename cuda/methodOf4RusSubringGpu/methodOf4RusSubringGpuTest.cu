@@ -165,6 +165,7 @@ int methodOf4Rus_test(int rows, int table_cols_max, int sparsity) {
     delete_matrix_device(squeezed_matrixB_device);
     delete_matrix_device(squeezed_matrixA_device);
     delete_matrix_device(squeezed_matrixC_device);
+    tables.free();
     
     printf("Test passed for sparsity=%d, rows = %d is %f ms.\n", sparsity, rows, elapsedTime);
     return 1;
