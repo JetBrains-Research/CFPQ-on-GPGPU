@@ -2,32 +2,25 @@
 #include "methodOf4RusSubringGpu.h"
 
 #define K 8
-
 #define lsb(i) ((i) & -(i)) // return least significant bit
 #define BITS sizeof(__uint32_t) * 8// aka 32
 
-
-__device__ uint32_t is_changed_matrix = 0;
+__device__ bool is_changed_matrix = false;
 
 //return the next number with the same number of bits
-__device__ int snoob(int i)
-{   
+__device__ int snoob(int i) {
     int least = lsb(i);
     int ripple = i + least;
     return (((ripple ^ i) >> 2) / least) | ripple;
 }
 
-
-
-__global__ void make_table_kernel_subring(uint32_t *B, uint32_t ** lookup_tables, int cols, int rows, int tables_num, int real_cols, int offset) {
-
-    // each thread calculate part of the table 256 elements in one table
+__global__ void make_table_kernel_subring(uint32_t *B, uint32_t **lookup_tables, int cols,
+                                       int rows, int tables_num, int real_cols, int offset) {
     int x_col =  blockIdx.x * BLOCK_SIZE_COL + threadIdx.x;
-    int y_row = (blockIdx.y * BLOCK_SIZE_ROW + threadIdx.y)*K;
-    int twokey = (1<<K); //2^K
+    int y_row = (blockIdx.y * BLOCK_SIZE_ROW + threadIdx.y) * K;
+    int twokey = (1 << K);
     int i;
     int least,rest;
-
 
     if(x_col >= cols || y_row >= rows ) {
         //if thread out of current computed part of the table then return
@@ -42,7 +35,7 @@ __global__ void make_table_kernel_subring(uint32_t *B, uint32_t ** lookup_tables
     // fill when table when 1 bit
     #pragma unroll
     for(int j = 0; j < K; j++) {
-        i = 1<<(j);
+        i = 1 << (j);
         T[i * cols + x_col] = B[ (y_row + j) * real_cols  + x_col + offset];
     }
     
@@ -59,21 +52,18 @@ __global__ void make_table_kernel_subring(uint32_t *B, uint32_t ** lookup_tables
     }
 }
 
-
-__device__ int get_actual_key(uint32_t composite_key, int j){
+__device__ int get_actual_key(uint32_t composite_key, int j) {
     return  (0xFF) & (composite_key >> (8 * j));
 }
 
-
-//C+=AB
-__global__ void m4ri_mul_kernel_subring(uint32_t *A, uint32_t *C, uint32_t **lookup_tables,int rows, int cols,int cols_table,int offset) {
-
+__global__ void m4ri_mul_kernel_subring(uint32_t *A, uint32_t *C, uint32_t **lookup_tables,
+                                              int rows, int cols, int cols_table, int offset) {
     __shared__ uint32_t local_A[BLOCK_SIZE_ROW][BLOCK_SIZE_COL];
     int col_x = threadIdx.x + blockIdx.x * BLOCK_SIZE_COL + offset;
     int row_y = threadIdx.y + blockIdx.y * BLOCK_SIZE_ROW;
     int col_in_T = threadIdx.x + blockIdx.x * BLOCK_SIZE_COL;
     int full_steps = cols / BLOCK_SIZE_COL;
-    int small_step = cols % BLOCK_SIZE_COL ;
+    int small_step = cols % BLOCK_SIZE_COL;
     uint32_t *T;
     uint32_t composite_key;
     int actual_key;
@@ -99,8 +89,8 @@ __global__ void m4ri_mul_kernel_subring(uint32_t *A, uint32_t *C, uint32_t **loo
         for(int t = 0; t < BLOCK_SIZE_COL; t++) {
             composite_key = local_A[threadIdx.y][t];
             for(int j = 0; j < 4;j++) {
-                T = lookup_tables[BLOCK_SIZE_COL * i*4 + t*4 + j];
-                actual_key = get_actual_key(composite_key,j);
+                T = lookup_tables[BLOCK_SIZE_COL * i * 4 + t * 4 + j];
+                actual_key = get_actual_key(composite_key, j);
                 value |= T[actual_key * cols_table + col_in_T];
             }
         }
@@ -129,10 +119,10 @@ __global__ void m4ri_mul_kernel_subring(uint32_t *A, uint32_t *C, uint32_t **loo
             }
         }
     }
-    value = value|old_c;
+    value = value | old_c;
     
-    if(is_changed_matrix == NOT_CHANGED && value != old_c) {
-        is_changed_matrix = CHANGED;
+    if(is_changed_matrix == false && value != old_c) {
+        is_changed_matrix = true;
     }
 
     if(col_x < cols && row_y < rows && col_in_T < cols_table && value != old_c) {
@@ -140,13 +130,10 @@ __global__ void m4ri_mul_kernel_subring(uint32_t *A, uint32_t *C, uint32_t **loo
     }
 }
 
-
-
-// c += ab
-
-int wrapper_methodOf4Rus_subring(uint32_t *a, uint32_t *b, uint32_t *c, Tables tables, int rows, int cols, uint32_t *is_c_changed) {
-    
-    cudaMemcpyToSymbol(is_changed_matrix, is_c_changed, sizeof(uint32_t),0,cudaMemcpyHostToDevice);
+int wrapper_methodOf4Rus_subring(uint32_t *a, uint32_t *b, uint32_t *c, 
+                                     Tables tables, int rows, int cols) {
+    int is_c_changed = false;
+    cudaMemcpyToSymbol(is_changed_matrix, &is_c_changed, sizeof(bool), 0, cudaMemcpyHostToDevice);
     
     //setup configuration for table kernel
     dim3 dimBlock_table_kernel(BLOCK_SIZE_COL,BLOCK_SIZE_ROW);
@@ -166,29 +153,26 @@ int wrapper_methodOf4Rus_subring(uint32_t *a, uint32_t *b, uint32_t *c, Tables t
     dim3 dimGrid_m4ri_last( (tables.cols_last + BLOCK_SIZE_COL- 1) / BLOCK_SIZE_COL,
                             ((rows+BLOCK_SIZE_ROW-1)/BLOCK_SIZE_ROW));
     
-    
     for(int i = 0; i < tables.num_launches; i++) {
-        make_table_kernel_subring<<<dimGrid_table_n,dimBlock_table_kernel>>> 
-             (b, tables.table_n, tables.cols_n, rows, tables.num_tables, cols, i*tables.cols_n);
+        make_table_kernel_subring<<<dimGrid_table_n, dimBlock_table_kernel>>> 
+             (b, tables.table_n, tables.cols_n, rows, tables.num_tables, cols, i * tables.cols_n);
         cudaDeviceSynchronize();
-        m4ri_mul_kernel_subring<<<dimGrid_m4ri_n,dimBlock_m4ri>>>
-             (a,c,tables.table_n, rows, cols, tables.cols_n, i * tables.cols_n);
+        m4ri_mul_kernel_subring<<<dimGrid_m4ri_n, dimBlock_m4ri>>>
+             (a, c, tables.table_n, rows, cols, tables.cols_n, i * tables.cols_n);
         cudaDeviceSynchronize();
     }
     
     if(tables.cols_last != 0) {
-        make_table_kernel_subring<<<dimGrid_table_last,dimBlock_table_kernel>>>
-             (b, tables.table_last, tables.cols_last, rows, tables.num_tables, cols, tables.num_launches * tables.cols_n);
+        make_table_kernel_subring<<<dimGrid_table_last, dimBlock_table_kernel>>>
+             (b, tables.table_last, tables.cols_last, rows, tables.num_tables, cols, 
+                                                 tables.num_launches * tables.cols_n);
         cudaDeviceSynchronize();
         m4ri_mul_kernel_subring<<<dimGrid_m4ri_last,dimBlock_m4ri>>>
-             (a, c, tables.table_last, rows, cols, tables.cols_last, tables.num_launches*tables.cols_n);
+             (a, c, tables.table_last, rows, cols, tables.cols_last, 
+                                                   tables.num_launches*tables.cols_n);
         cudaDeviceSynchronize();
     }
     
-    cudaMemcpyFromSymbol(is_c_changed,is_changed_matrix, sizeof(uint32_t), 0,cudaMemcpyDeviceToHost);
-    return *is_c_changed;
+    cudaMemcpyFromSymbol(&is_c_changed, is_changed_matrix, sizeof(bool), 0, cudaMemcpyDeviceToHost);
+    return is_c_changed;
 }
-
-
-   
-
