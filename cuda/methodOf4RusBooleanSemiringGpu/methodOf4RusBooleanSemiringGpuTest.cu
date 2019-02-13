@@ -1,5 +1,5 @@
 
-#include "methodOf4RusSubringGpu.h"
+#include "methodOf4RusBooleanSemiringGpu.h"
 #include "gpu_memory_management.h"
 #include "gpu_timer.cu"
 #include<time.h>
@@ -30,7 +30,7 @@ void squeeze_to_bits_rows(const uint32_t *src, int src_rows, int src_cols, uint3
 }
 
 // dummy mul for testing method of four russian
-__global__ void dummy_gpu_subring_mul(uint32_t *a, uint32_t *b, uint32_t *c, int m, int n, int k) { 
+__global__ void dummy_gpu_semiring_mul(uint32_t *a, uint32_t *b, uint32_t *c, int m, int n, int k) { 
     int row = blockIdx.y * blockDim.y + threadIdx.y; 
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int sum = 0;
@@ -44,10 +44,10 @@ __global__ void dummy_gpu_subring_mul(uint32_t *a, uint32_t *b, uint32_t *c, int
     }
 }
 
-void wrapper_sdummy_subring_mul(uint32_t *a, uint32_t *b, uint32_t *c, int rows, int cols) {
+void wrapper_sdummy_semiring_mul(uint32_t *a, uint32_t *b, uint32_t *c, int rows, int cols) {
     dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
     dim3 dimGrid((cols + BLOCK_SIZE - 1) / BLOCK_SIZE, (rows + BLOCK_SIZE - 1) / BLOCK_SIZE); 
-    dummy_gpu_subring_mul<<<dimGrid,dimBlock>>>(a, b, c, rows, cols, cols);
+    dummy_gpu_semiring_mul<<<dimGrid,dimBlock>>>(a, b, c, rows, cols, cols);
     cudaDeviceSynchronize();
 }
  
@@ -62,7 +62,7 @@ void rand_fill(int rows, int sparsity, uint32_t *matrix) {
     }
 }
 
-int methodOf4Rus_test(int rows, int table_cols_max, int sparsity) {
+int method_of_4rus_test(int rows, int table_cols_max, int sparsity) {
     if(rows % SQUEEZE != 0) {
         rows +=  (SQUEEZE - (rows % SQUEEZE));
     }
@@ -101,7 +101,7 @@ int methodOf4Rus_test(int rows, int table_cols_max, int sparsity) {
     copy_host_to_device_sync(unsqueezed_matrixB, b_d, rows * rows);
     copy_host_to_device_sync(unsqueezed_matrixAXB, axb_d, rows * rows);
     
-    wrapper_sdummy_subring_mul(a_d, b_d, axb_d, rows, rows);
+    wrapper_sdummy_semiring_mul(a_d, b_d, axb_d, rows, rows);
     copy_device_to_host_sync(axb_d, unsqueezed_matrixAXB, rows * rows);
 
     delete_matrix_device(a_d);
@@ -127,8 +127,8 @@ int methodOf4Rus_test(int rows, int table_cols_max, int sparsity) {
     copy_host_to_device_sync(squeezed_matrixC, squeezed_matrixC_device, rows * cols);
      
     gpuTimer.Start();    
-    wrapper_methodOf4Rus_subring(squeezed_matrixA_device, squeezed_matrixB_device, 
-                                       squeezed_matrixC_device, tables, rows, cols);
+    wrapper_method_of_4rus_bool_semiring(squeezed_matrixA_device, squeezed_matrixB_device, 
+                                              squeezed_matrixC_device, tables, rows, cols);
     gpuTimer.Stop();
     elapsedTime = gpuTimer.ElapsedMs();
     
@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
     int table_size = strtol(argv[6], NULL, 10);
     for(int sparsity = 2; sparsity < max_sparsity; sparsity += sparsity_step) {
         for(int size = initial_size; size < max_size; size += size_step) {
-            methodOf4Rus_test(size, table_size, sparsity); 
+            method_of_4rus_test(size, table_size, sparsity); 
         }  
         
     }

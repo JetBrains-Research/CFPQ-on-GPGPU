@@ -1,5 +1,5 @@
 
-#include "methodOf4RusSubringGpu.h"
+#include "methodOf4RusBooleanSemiringGpu.h"
 
 #define K 8
 #define lsb(i) ((i) & -(i)) // return least significant bit
@@ -14,7 +14,7 @@ __device__ int snoob(int i) {
     return (((ripple ^ i) >> 2) / least) | ripple;
 }
 
-__global__ void make_table_kernel_subring(uint32_t *B, uint32_t **lookup_tables, int cols,
+__global__ void make_table_kernel_semiring(uint32_t *B, uint32_t **lookup_tables, int cols,
                                        int rows, int tables_num, int real_cols, int offset) {
     int x_col =  blockIdx.x * BLOCK_SIZE_COL + threadIdx.x;
     int y_row = (blockIdx.y * BLOCK_SIZE_ROW + threadIdx.y) * K;
@@ -56,7 +56,7 @@ __device__ int get_actual_key(uint32_t composite_key, int j) {
     return  (0xFF) & (composite_key >> (8 * j));
 }
 
-__global__ void m4ri_mul_kernel_subring(uint32_t *A, uint32_t *C, uint32_t **lookup_tables,
+__global__ void m4ri_mul_kernel_semiring(uint32_t *A, uint32_t *C, uint32_t **lookup_tables,
                                               int rows, int cols, int cols_table, int offset) {
     __shared__ uint32_t local_A[BLOCK_SIZE_ROW][BLOCK_SIZE_COL];
     int col_x = threadIdx.x + blockIdx.x * BLOCK_SIZE_COL + offset;
@@ -81,7 +81,7 @@ __global__ void m4ri_mul_kernel_subring(uint32_t *A, uint32_t *C, uint32_t **loo
     
     #pragma unroll
     for(int i = 0; i < full_steps; i++) {
-        // все полные прогоны по ключам
+        // all complete runs
         tmp = __brev(A[ row_y * cols + threadIdx.x + i * BLOCK_SIZE_COL]); // reverse
         local_A[threadIdx.y][threadIdx.x] = tmp;
         __syncthreads();
@@ -105,7 +105,7 @@ __global__ void m4ri_mul_kernel_subring(uint32_t *A, uint32_t *C, uint32_t **loo
         __syncthreads();
 
         if(col_x >= cols || col_in_T >= cols_table  || row_y >= rows) {
-            //threads that out of current part of C contributed to all threads(load keys)
+            // threads that out of current part of C contributed to all threads(load keys)
             // and can return
             return;
         }
@@ -130,8 +130,8 @@ __global__ void m4ri_mul_kernel_subring(uint32_t *A, uint32_t *C, uint32_t **loo
     }
 }
 
-int wrapper_methodOf4Rus_subring(uint32_t *a, uint32_t *b, uint32_t *c, 
-                                     Tables tables, int rows, int cols) {
+int wrapper_method_of_4rus_bool_semiring(uint32_t *a, uint32_t *b, uint32_t *c, 
+                                            Tables tables, int rows, int cols) {
     int is_c_changed = false;
     cudaMemcpyToSymbol(is_changed_matrix, &is_c_changed, sizeof(bool), 0, cudaMemcpyHostToDevice);
     
@@ -154,20 +154,20 @@ int wrapper_methodOf4Rus_subring(uint32_t *a, uint32_t *b, uint32_t *c,
                             ((rows+BLOCK_SIZE_ROW-1)/BLOCK_SIZE_ROW));
     
     for(int i = 0; i < tables.num_launches; i++) {
-        make_table_kernel_subring<<<dimGrid_table_n, dimBlock_table_kernel>>> 
+        make_table_kernel_semiring<<<dimGrid_table_n, dimBlock_table_kernel>>> 
              (b, tables.table_n, tables.cols_n, rows, tables.num_tables, cols, i * tables.cols_n);
         cudaDeviceSynchronize();
-        m4ri_mul_kernel_subring<<<dimGrid_m4ri_n, dimBlock_m4ri>>>
+        m4ri_mul_kernel_semiring<<<dimGrid_m4ri_n, dimBlock_m4ri>>>
              (a, c, tables.table_n, rows, cols, tables.cols_n, i * tables.cols_n);
         cudaDeviceSynchronize();
     }
     
     if(tables.cols_last != 0) {
-        make_table_kernel_subring<<<dimGrid_table_last, dimBlock_table_kernel>>>
+        make_table_kernel_semiring<<<dimGrid_table_last, dimBlock_table_kernel>>>
              (b, tables.table_last, tables.cols_last, rows, tables.num_tables, cols, 
                                                  tables.num_launches * tables.cols_n);
         cudaDeviceSynchronize();
-        m4ri_mul_kernel_subring<<<dimGrid_m4ri_last,dimBlock_m4ri>>>
+        m4ri_mul_kernel_semiring<<<dimGrid_m4ri_last,dimBlock_m4ri>>>
              (a, c, tables.table_last, rows, cols, tables.cols_last, 
                                                    tables.num_launches*tables.cols_n);
         cudaDeviceSynchronize();
