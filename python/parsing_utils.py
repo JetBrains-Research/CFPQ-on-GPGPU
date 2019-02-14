@@ -23,13 +23,12 @@ def parse_graph(_file):
     result_graph = defaultdict(dict)
     max_node = 0
     with open(_file, 'rt') as graph:
-        lines = graph.readlines()
-    for line in lines:
-        terms = line.split()
-        assert len(terms) == 3
-        from_vert, to_vert = int(terms[0]), int(terms[2].rstrip(','))
-        max_node = max(max_node, from_vert, to_vert)
-        result_graph[from_vert - 1][to_vert - 1] = terms[1]
+        for line in graph:
+            terms = line.split()
+            assert len(terms) == 3, terms
+            from_vert, to_vert = int(terms[0]), int(terms[2].rstrip(','))
+            max_node = max(max_node, from_vert, to_vert)
+            result_graph[from_vert - 1][to_vert - 1] = terms[1]
     return result_graph, max_node
 
 

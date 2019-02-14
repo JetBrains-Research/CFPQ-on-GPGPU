@@ -1,10 +1,12 @@
 import argparse
 import sys
-from parsing_utils import *
-from math_utils import *
-from functools import wraps
 import time
+from collections import defaultdict
+from functools import wraps
 
+import numpy as np
+from math_utils import get_boolean_adjacency_matrices, remove_terminals
+from parsing_utils import parse_graph, parse_grammar, products_set
 
 VERBOSE = False
 
@@ -16,6 +18,7 @@ def time_measure(f):
         out = f(*args, **kwargs)
         time_stop = time.time()
         return out, time_stop - time_start
+    return inner
 
 
 def main(grammar_file, graph_file, args):
@@ -27,14 +30,14 @@ def main(grammar_file, graph_file, args):
 
     # supposing that matrices being altered in-place
     _, time_elapsed = iterate_on_grammar(grammar, inverse_grammar, matrices)
-    get_solution(args.output)
+    get_solution(matrices, args.output)
     print(int(1000 * (time_elapsed + 0.0005)))
 
 
-def get_solution(file=sys.stdout):
+def get_solution(matrices, file=sys.stdout):
     if type(file) is str:
         file = open(file, 'wt')
-    else
+    else:
         assert file is sys.stdout, f'Only allowed to print solution in file or stdout, not in {file}'
     
     for nonterminal, matrix in matrices.items():
@@ -48,7 +51,7 @@ def get_solution(file=sys.stdout):
 
 
 @time_measure
-def iterate_on_grammar(grammar, inverse_grammar, matrices, shared_memory=False):
+def iterate_on_grammar(grammar, inverse_grammar, matrices):
     inverse_by_nonterm = defaultdict(set)
     for body, heads in inverse_grammar.items():
         assert type(body) is tuple, 'Left terminals in grammar: {}'.format(body)
@@ -61,12 +64,13 @@ def iterate_on_grammar(grammar, inverse_grammar, matrices, shared_memory=False):
     while to_recalculate:
         head, body = to_recalculate.pop()
         assert type(body) is tuple, 'Body is either str or tuple, not {}'.format(type(body))
-        is_changed = ... # Awesome multiplication methods here
+        is_changed = ...  # Awesome multiplication methods here
         if not is_changed:
             continue
         for product in inverse_by_nonterm[head]:
             if product != (head, body):
                 to_recalculate.add(product)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
