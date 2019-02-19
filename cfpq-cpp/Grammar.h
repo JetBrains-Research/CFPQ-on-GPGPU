@@ -26,7 +26,7 @@ public:
     virtual ~Grammar();
 
     template <class T1 = Matrix, class T2 = MatricesEnv>
-            unsigned int intersection_with_graph(Graph &graph) {
+    unsigned int intersection_with_graph(Graph &graph) {
         T2 *utils = new T2();
         vertices_count = graph.vertices_count;
         matrices.reserve(nonterm_count);
