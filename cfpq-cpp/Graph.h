@@ -19,7 +19,6 @@ public:
     std::vector<edge> edges;
 
     unsigned int vertices_count = 0;
-
 };
 
 #endif //CFPQ_GRAPH_H
