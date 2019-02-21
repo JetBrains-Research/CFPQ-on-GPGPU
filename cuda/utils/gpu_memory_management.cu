@@ -63,6 +63,10 @@ void copy_host_to_device_sync(uint32_t *host, uint32_t *device, int elems) {
     gpuErrchk(cudaMemcpy(device, host, sizeof(uint32_t) * elems, cudaMemcpyHostToDevice));
 }
 
+void copy_device_to_device_sync(uint32_t *dst, uint32_t *src, int elems) {
+    gpuErrchk(cudaMemcpy(dst, src, sizeof(uint32_t) * elems, cudaMemcpyDeviceToDevice));
+}
+
 void copy_device_to_host_async(uint32_t *device, uint32_t *host, int elems) {
     gpuErrchk(cudaMemcpyAsync(host, device, sizeof(uint32_t) * elems, cudaMemcpyDeviceToHost));
 }

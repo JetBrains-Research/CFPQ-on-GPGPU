@@ -19,7 +19,7 @@ void copy_device_to_host_sync(uint32_t *device, uint32_t *host, int elems);
 
 void copy_host_to_device_sync(uint32_t *host, uint32_t *device, int elems);
 
-void copy_device_to_device(uint32_t *src, uint32_t *dst, int elems);
+void copy_device_to_device_sync(uint32_t *src, uint32_t *dst, int elems);
 
 void copy_device_to_host_async(uint32_t *device, uint32_t *host, int elems);
 
