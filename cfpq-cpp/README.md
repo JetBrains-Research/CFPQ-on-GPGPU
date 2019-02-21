@@ -16,7 +16,6 @@ grammar.intersection_with_graph<MyMatrixClass, MyEnvClass>(graph);
 #include <iostream>
 #include "Grammar.h"
 #include "Graph.h"
-#include "Matrix.h"
 #include "my_matrix.h"
 
 int main(int argc, char *argv[]) {
