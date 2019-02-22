@@ -11,3 +11,18 @@ grammar.intersection_with_graph<MyMatrixClass, MyEnvClass>(graph);
 * Method `MatricesEnv::environment_preprocessing` will be called before algorithm
 
 * Method `MatricesEnv::environment_postprocessing` will be called after algorithm
+3. `main.cpp` example:
+```cpp
+#include <iostream>
+#include "Grammar.h"
+#include "Graph.h"
+#include "my_matrix.h"
+
+int main(int argc, char *argv[]) {
+    Grammar grammar = Grammar(argv[1]);
+    Graph graph = Graph(argv[2]);
+    std::cout << grammar.intersection_with_graph<MyMatrixClass, MyEnvClass>(graph);
+    grammar.print_results(argv[3]);
+    return 0;
+}
+```
