@@ -1,6 +1,7 @@
 
 #include "gpu_memory_management.h"
-#include <stdio.h> 
+#include <stdio.h>
+#include <iostream> 
 
 #define gpuErrchk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 
@@ -63,7 +64,7 @@ void copy_host_to_device_sync(uint32_t *host, uint32_t *device, int elems) {
     gpuErrchk(cudaMemcpy(device, host, sizeof(uint32_t) * elems, cudaMemcpyHostToDevice));
 }
 
-void copy_device_to_device_sync(uint32_t *dst, uint32_t *src, int elems) {
+void copy_device_to_device_sync(uint32_t *src, uint32_t *dst, int elems) {
     gpuErrchk(cudaMemcpy(dst, src, sizeof(uint32_t) * elems, cudaMemcpyDeviceToDevice));
 }
 

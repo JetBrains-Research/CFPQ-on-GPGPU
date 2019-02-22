@@ -49,4 +49,4 @@ struct Tables {
 };
 
 int wrapper_method_of_4rus_bool_semiring(uint32_t *a, uint32_t *b, uint32_t *c, 
-                                              Tables tables, int rows, int cols);
+                                              Tables &tables, int rows, int cols);

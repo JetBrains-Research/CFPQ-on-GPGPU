@@ -39,7 +39,7 @@ public:
 
         if (n % SQUEEZE != 0) {
             int part = SQUEEZE - (n % SQUEEZE);
-            size_multiple_by_32 =+ part;
+            size_multiple_by_32 += part;
         }
         cols = size_multiple_by_32 / SQUEEZE;
 

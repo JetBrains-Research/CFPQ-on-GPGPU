@@ -131,7 +131,7 @@ __global__ void m4ri_mul_kernel_semiring(uint32_t *A, uint32_t *C, uint32_t **lo
 }
 
 int wrapper_method_of_4rus_bool_semiring(uint32_t *a, uint32_t *b, uint32_t *c, 
-                                            Tables tables, int rows, int cols) {
+                                            Tables &tables, int rows, int cols) {
     int is_c_changed = false;
     cudaMemcpyToSymbol(is_changed_matrix, &is_c_changed, sizeof(bool), 0, cudaMemcpyHostToDevice);
     

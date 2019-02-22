@@ -1,11 +1,13 @@
 
 #include "methodOf4RusBooleanSemiringMatrix.h"
-
+#include "gpu_memory_management.h"
+#include <iostream>
 #define MAXIMUM_PARTITION 32
 
+
+
 MethodOf4RusMatricesEnv::~MethodOf4RusMatricesEnv() {
-    tables.free();
-    delete_matrix_device(extra_matrix_device);
+
 }
 
 void MethodOf4RusMatricesEnv::environment_preprocessing
@@ -15,16 +17,19 @@ void MethodOf4RusMatricesEnv::environment_preprocessing
         cols = tmp->cols;
         size_multiple_by_32 = tmp->size_multiple_by_32;
     } else {
-        //raise Error;
+        std::cout<<"ERROR";
         return;
     }
+
+    extra_matrix_device = allocate_matrix_device(size_multiple_by_32, cols);
 
     tables.initialize(size_multiple_by_32, cols, MAXIMUM_PARTITION);
     for (auto &m : matrices) {
         auto *A = dynamic_cast<MethodOf4RusMatrix *>(m);
+        A->env = this;
         copy_host_to_device_async(A->matrix_host, A->matrix_device, 
                   A->size_multiple_by_32 * A->cols);
-    }    
+    }
     synchronize_with_gpu();
 }
 
@@ -35,6 +40,8 @@ void MethodOf4RusMatricesEnv::environment_postprocessing
         copy_device_to_host_async(A->matrix_device, A->matrix_host, 
                   A->size_multiple_by_32 * A->cols);
     }
+    tables.free();
+    delete_matrix_device(extra_matrix_device);
     synchronize_with_gpu();
 }
 
@@ -53,7 +60,7 @@ bool MethodOf4RusMatrix::add_mul(Matrix *left, Matrix *right) {
     auto *A = dynamic_cast<MethodOf4RusMatrix *>(left);
     auto *B = dynamic_cast<MethodOf4RusMatrix *>(right);
     
-    if(A->matrix_device == matrix_device) {
+    if(A->matrix_device == matrix_device) { 
         // we need extra matrix
         copy_device_to_device_sync(A->matrix_device, env->extra_matrix_device,
                                                         size_multiple_by_32 * cols);
