@@ -1,5 +1,6 @@
 
-#pragma once
+#ifndef GPU_M4RUS_MUL
+#define GPU_M4RUS_MUL
 
 #include <stdio.h> 
 #include <stdint.h>
@@ -50,3 +51,5 @@ struct Tables {
 
 int wrapper_method_of_4rus_bool_semiring(uint32_t *a, uint32_t *b, uint32_t *c, 
                                               Tables &tables, int rows, int cols);
+
+#endif // GPU_M4RUS_MUL

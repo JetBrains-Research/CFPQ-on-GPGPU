@@ -1,5 +1,6 @@
 
-#pragma once
+#ifndef GPU_M4RUS_MATRIX
+#define GPU_M4RUS_MATRIX
 
 #include <vector>
 #include "Matrix.h"
@@ -56,3 +57,5 @@ public:
 
     bool add_mul(Matrix *left, Matrix *right) override;
 };
+
+#endif //#GPU_M4RUS_MATRIX

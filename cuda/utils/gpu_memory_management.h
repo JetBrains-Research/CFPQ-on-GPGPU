@@ -1,5 +1,6 @@
 
-#pragma once
+#ifndef GPU_MEMORY_MANAGEMENT
+#define GPU_MEMORY_MANAGEMENT
 
 #include <stdint.h>
 
@@ -26,3 +27,5 @@ void copy_device_to_host_async(uint32_t *device, uint32_t *host, int elems);
 void copy_host_to_device_async(uint32_t *host, uint32_t *device, int elems);
 
 void synchronize_with_gpu();
+
+#endif //GPU_MEMORY_MANAGEMENT
