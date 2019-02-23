@@ -8,7 +8,7 @@ tpb_x = threadsperblock[0]
 tpb_y = threadsperblock[1]
 
 
-def update_matrix_cpu(matrices, head, body, shared_memory=False):
+def update_matrix_cpu(matrices, head, body):
     head_mat = matrices[head]
     body_first_mat, body_second_mat = matrices[body[0]], matrices[body[1]]
     if str(head_mat.dtype) == 'bool': 
@@ -19,7 +19,7 @@ def update_matrix_cpu(matrices, head, body, shared_memory=False):
         raise ValueError('CPU multiplication of matrices type {} is not supported'.format(head_mat.dtype))
 
 
-def update_matrix_gpu(matrices, head, body, shared_memory=False):
+def update_matrix_gpu(matrices, head, body):
     head_mat, body_first_mat = matrices[head], matrices[body[0]]
     body_second_mat = matrices[body[1]]
     is_changed = cuda.device_array((1,), dtype=bool)
