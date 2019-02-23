@@ -43,12 +43,10 @@ public:
         }
         cols = size_multiple_by_32 / SQUEEZE;
 
-        matrix_device = allocate_matrix_device(size_multiple_by_32, cols);
         matrix_host = allocate_matrix_host(size_multiple_by_32, cols);
     }
 
     ~MethodOf4RusMatrix() {
-        delete_matrix_device(matrix_device);
         delete_matrix_host(matrix_host);
     }
 

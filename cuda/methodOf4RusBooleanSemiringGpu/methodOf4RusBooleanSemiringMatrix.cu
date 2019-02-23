@@ -1,14 +1,11 @@
 
 #include "methodOf4RusBooleanSemiringMatrix.h"
 #include "gpu_memory_management.h"
-#include <iostream>
+#include <stdexcept>
+
 #define MAXIMUM_PARTITION 32
 
-
-
-MethodOf4RusMatricesEnv::~MethodOf4RusMatricesEnv() {
-
-}
+MethodOf4RusMatricesEnv::~MethodOf4RusMatricesEnv() { }
 
 void MethodOf4RusMatricesEnv::environment_preprocessing
                                 (const std::vector<Matrix *> &matrices) {
@@ -17,8 +14,7 @@ void MethodOf4RusMatricesEnv::environment_preprocessing
         cols = tmp->cols;
         size_multiple_by_32 = tmp->size_multiple_by_32;
     } else {
-        std::cout<<"ERROR";
-        return;
+        throw std::runtime_error("Error: Empty vector of matrices");
     }
 
     extra_matrix_device = allocate_matrix_device(size_multiple_by_32, cols);
@@ -27,6 +23,7 @@ void MethodOf4RusMatricesEnv::environment_preprocessing
     for (auto &m : matrices) {
         auto *A = dynamic_cast<MethodOf4RusMatrix *>(m);
         A->env = this;
+        A->matrix_device = allocate_matrix_device(size_multiple_by_32, cols);
         copy_host_to_device_async(A->matrix_host, A->matrix_device, 
                   A->size_multiple_by_32 * A->cols);
     }
@@ -39,6 +36,7 @@ void MethodOf4RusMatricesEnv::environment_postprocessing
         auto *A = dynamic_cast<MethodOf4RusMatrix *>(m);
         copy_device_to_host_async(A->matrix_device, A->matrix_host, 
                   A->size_multiple_by_32 * A->cols);
+        delete_matrix_device(A->matrix_device);
     }
     tables.free();
     delete_matrix_device(extra_matrix_device);
@@ -47,13 +45,12 @@ void MethodOf4RusMatricesEnv::environment_postprocessing
 
 void MethodOf4RusMatrix::set_bit(unsigned int row, unsigned col) {
     matrix_host[row * cols + (col / SQUEEZE)] |= 
-                                    1 << (31 - (col % SQUEEZE));
+                                    1L << (31 - (col % SQUEEZE));
 }
 
 unsigned int MethodOf4RusMatrix::get_bit(unsigned int row, unsigned col) {
-    auto bit = matrix_host [row * cols + (col / SQUEEZE)] &
-                                     1 << (31 - (col % SQUEEZE));
-    return static_cast<unsigned int>(bit);
+    return (matrix_host [row * cols + (col / SQUEEZE)] &
+                                     1L << (31 - (col % SQUEEZE)) == 0) ? 0 : 1;
 }
 
 bool MethodOf4RusMatrix::add_mul(Matrix *left, Matrix *right) {
