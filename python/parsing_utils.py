@@ -38,3 +38,11 @@ def products_set(grammar):
         for body in grammar[head]:
             products.add((head, body))
     return products
+
+
+def products_list(grammar):
+    products = []
+    for head in grammar:
+        for body in grammar[head]:
+            products.append((head, body))
+    return products
