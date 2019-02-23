@@ -2,27 +2,16 @@ import argparse
 import sys
 import time
 from collections import defaultdict
-from functools import wraps
 
 import numpy as np
 
-from math_utils import get_boolean_adjacency_matrices, remove_terminals
+from math_utils import get_boolean_adjacency_matrices, remove_terminals, time_measure
 from parsing_utils import parse_graph, parse_grammar, products_set, products_list
 from matmul import update_matrix_cpu, update_matrix_gpu
 from matrix_utils import to_gpu, from_gpu, to_type, from_type
 
 
 VERBOSE = False
-
-
-def time_measure(f):
-    @wraps(f)
-    def inner(*args, **kwargs):
-        time_start = time.time()
-        out = f(*args, **kwargs)
-        time_stop = time.time()
-        return out, time_stop - time_start
-    return inner
 
 
 def main(grammar_file, graph_file, args):
@@ -32,21 +21,28 @@ def main(grammar_file, graph_file, args):
     matrices = get_boolean_adjacency_matrices(grammar, inverse_grammar, graph, graph_size)
     remove_terminals(grammar, inverse_grammar)
 
+    algo_time, overhead_time = 0, 0
+
     # supposing that matrices being altered in-place
     if args.type != 'bool':
-        to_type(matrices, args.type)
+        _, to_type_time = to_type(matrices, args.type)
+        algo_time += to_type_time
     if not args.on_cpu:
-        to_gpu(matrices)
+        _, to_gpu_time = to_gpu(matrices)
+        overhead_time += to_gpu_time
 
-    _, time_elapsed = iterate_on_grammar(grammar, inverse_grammar, matrices)
+    _, iteration_time = iterate_on_grammar(grammar, inverse_grammar, matrices)
+    algo_time += iteration_time
 
     if not args.on_cpu:
-        from_gpu(matrices)
+        _, from_gpu_time = from_gpu(matrices)
+        algo_time += from_gpu_time
     if args.type != 'bool':
-        from_type(matrices, args.type, graph_size)
+        _, from_type_time = from_type(matrices, args.type, graph_size)
+        overhead_time += from_type_time
 
     get_solution(matrices, args.output)
-    print(int(1000 * time_elapsed + 0.5))
+    print(int(1000 * algo_time + 0.5), int(1000 * overhead_time + 0.5))
 
 
 def get_solution(matrices, file=sys.stdout):
@@ -65,7 +61,6 @@ def get_solution(matrices, file=sys.stdout):
 def iterate_on_grammar_tracking(grammar, inverse_grammar, matrices):
     inverse_by_nonterm = defaultdict(set)
     for body, heads in inverse_grammar.items():
-        assert type(body) is tuple, 'Left terminals in grammar: {}'.format(body)
         for head in heads:
             if body[0] != head:
                 inverse_by_nonterm[body[0]].add((head, body))
@@ -75,7 +70,6 @@ def iterate_on_grammar_tracking(grammar, inverse_grammar, matrices):
     to_recalculate = products_set(grammar)
     while to_recalculate:
         head, body = to_recalculate.pop()
-        assert type(body) is tuple, 'Body is either str or tuple, not {}'.format(type(body))
         is_changed = update_matrix(matrices, head, body)
         if not is_changed:
             continue

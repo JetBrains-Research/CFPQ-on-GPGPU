@@ -3,7 +3,7 @@ import numpy as np
 import math
 
 
-threadsperblock = (16, 16)
+threadsperblock = (32, 32)
 tpb_x = threadsperblock[0]
 tpb_y = threadsperblock[1]
 
