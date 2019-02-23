@@ -27,14 +27,21 @@ def update_matrix_gpu(matrices, head, body, shared_memory=False):
     blockspergrid_x = int(math.ceil(body_first_mat.shape[0] / threadsperblock[0]))
     blockspergrid_y = int(math.ceil(body_second_mat.shape[1] / threadsperblock[1]))
     blockspergrid = (blockspergrid_x, blockspergrid_y)
-    if str(head_mat.dtype) == 'bool':
-        matmul_bool[blockspergrid, threadsperblock](body_first_mat, body_second_mat, head_mat, is_changed)
-        if not is_changed[0]:
-            return False
+
+    matmul_by_type = {'bool': matmul_bool, 'uint32': matmul_uint32}
+    mat_type = str(head_mat.dtype)
+    if mat_type in matmul_by_type:
+        matmul_method = matmul_by_type[mat_type][blockspergrid, threadsperblock]
+    else:
+        raise ValueError('GPU multiplication of matrices type {} is not supported'.format(mat_type))
+
+    matmul_method(body_first_mat, body_second_mat, head_mat, is_changed)
+
+    if is_changed[0]:
         matrices[head] = head_mat
         return True
     else:
-        raise ValueError('GPU multiplication of matrices type {} is not supported'.format(head_mat.dtype))
+        return False
 
 
 @cuda.jit
@@ -47,3 +54,23 @@ def matmul_bool(A, B, C, is_changed):
         if tmp and not C[row, col]:
             is_changed[0] = True
             C[row, col] = tmp
+
+
+@cuda.jit
+def matmul_uint32(A, B, C, is_changed):
+    row, col = cuda.grid(2)
+    size = 32
+    if row >= C.shape[0] or col >= C.shape[1]:
+        return
+    value = 0
+    for k in range(A.shape[1]):
+        cur_value_A = A[row, k]
+        for j in range(size - 1, -1, -1):
+            if cur_value_A & 1:
+                value |= (B[k * size + j, col])
+            cur_value_A >>= 1
+    old_value = C[row, col]
+    new_value = old_value | value
+    if new_value != old_value:
+        C[row, col] = new_value
+        is_changed[0] = True
