@@ -18,16 +18,28 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 __device__ bool is_changed;
 
-size_t matrix_memsize;
-uint32_t *tmp_matrix;
+// size_t matrix_memsize;
+// uint32_t *tmp_matrix;
 
-void initialize(int N_inp) {
-	N = N_inp;
-	rows = N;
-	cols = N / largest_pow2 + (N % largest_pow2 ? 1 : 0);
-	matrix_memsize = rows * cols * sizeof(uint32_t);
+// void initialize(int N_inp) {
+// 	N = N_inp;
+// 	rows = N;
+// 	cols = N / largest_pow2 + (N % largest_pow2 ? 1 : 0);
+// 	matrix_memsize = rows * cols * sizeof(uint32_t);
 
-	gpuErrchk(cudaMalloc(reinterpret_cast<void **>(&tmp_matrix), matrix_memsize));
+// 	gpuErrchk(cudaMalloc(reinterpret_cast<void **>(&tmp_matrix), matrix_memsize));
+// }
+
+inline int rows(int N) {
+	return N;
+}
+
+inline int cols(int N) {
+	return N / largest_pow2 + (N % largest_pow2 ? 1 : 0);
+}
+
+inline size_t matrix_memsize(int N) {
+	return rows(N) * cols(N) * sizeof(uint32_t);
 }
 
 __global__ void DummyMulAdd(uint32_t *A, uint32_t *B, uint32_t *C, int cols) {
@@ -106,30 +118,30 @@ void synchronize() {
 	cudaDeviceSynchronize();
 }
 
-void gpuMemset(uint32_t *d_M, int val) {
-	gpuErrchk(cudaMemset(d_M, val, matrix_memsize));
+void set_value(int N, uint32_t *d_M, int val) {
+	gpuErrchk(cudaMemset(d_M, val, matrix_memsize(N)));
 }
 
-uint32_t * device_matrix_alloc() {
+uint32_t * device_matrix_alloc(int N) {
 	uint32_t *d_M;
-	gpuErrchk(cudaMalloc(reinterpret_cast<void **>(&d_M), matrix_memsize));
+	gpuErrchk(cudaMalloc(reinterpret_cast<void **>(&d_M), matrix_memsize(N)));
 
 	return d_M;
 }
 
-uint32_t * host_matrix_calloc() {
+uint32_t * host_matrix_calloc(int N) {
     uint32_t *M;
-    gpuErrchk(cudaMallocHost(reinterpret_cast<void **>(&M), matrix_memsize));
-    gpuMemset(M, 0);
+    gpuErrchk(cudaMallocHost(reinterpret_cast<void **>(&M), matrix_memsize(N)));
+    set_value(N, M, 0);
 	return M;
 }
 
-void gpu2cpu(uint32_t *d_M, uint32_t *h_M) {
-	gpuErrchk(cudaMemcpyAsync(h_M, d_M, matrix_memsize, cudaMemcpyDeviceToHost));
+void gpu2cpu(int N, uint32_t *d_M, uint32_t *h_M) {
+	gpuErrchk(cudaMemcpyAsync(h_M, d_M, matrix_memsize(N), cudaMemcpyDeviceToHost));
 }
 
-void cpu2gpu(uint32_t *h_M, uint32_t *d_M) {
-	gpuErrchk(cudaMemcpyAsync(d_M, h_M, matrix_memsize, cudaMemcpyHostToDevice));
+void cpu2gpu(int N, uint32_t *h_M, uint32_t *d_M) {
+	gpuErrchk(cudaMemcpyAsync(d_M, h_M, matrix_memsize(N), cudaMemcpyHostToDevice));
 }
 
 void setFlag() {
@@ -144,22 +156,22 @@ bool getFlag() {
 	return flag;
 }
 
-bool MatrixMulAdd(uint32_t *A, uint32_t *B, uint32_t *C) {
+bool MatrixMulAdd(uint32_t *A, uint32_t *B, uint32_t *C, int N, uint32_t *tmp_matrix) {
 	bool safe = (A == C) || (B == C);
 	dim3 mul_threads(threads_x);
-	dim3 mul_blocks(cols / threads_x + (cols % threads_x ? 1 : 0), rows);
+	dim3 mul_blocks(cols(N) / threads_x + (cols(N) % threads_x ? 1 : 0), rows(N));
 
     setFlag();
 	if (safe) {
-		DummyMul <<<mul_blocks, mul_threads>>> (A, B, tmp_matrix, cols);
+		DummyMul <<<mul_blocks, mul_threads>>> (A, B, tmp_matrix, cols(N));
 		synchronize();
 		gpuErrchk(cudaGetLastError());
-		AddToLeft <<<mul_blocks, mul_threads>>> (C, tmp_matrix, cols);
+		AddToLeft <<<mul_blocks, mul_threads>>> (C, tmp_matrix, cols(N));
 		synchronize();
 		gpuErrchk(cudaGetLastError());
 	}
 	else {
-		DummyMulAdd <<<mul_blocks, mul_threads>>> (A, B, C, cols);
+		DummyMulAdd <<<mul_blocks, mul_threads>>> (A, B, C, cols(N));
 		synchronize();
 		gpuErrchk(cudaGetLastError());
 	}
