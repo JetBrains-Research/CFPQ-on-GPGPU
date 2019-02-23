@@ -8,7 +8,8 @@ import numpy as np
 
 from math_utils import get_boolean_adjacency_matrices, remove_terminals
 from parsing_utils import parse_graph, parse_grammar, products_set
-from matmul import update_matrix_cpu, update_matrix_gpu, matrices_from_gpu, matrices_to_gpu
+from matmul import update_matrix_cpu, update_matrix_gpu
+from matrix_utils import to_gpu, from_gpu, to_type, from_type
 
 
 VERBOSE = False
@@ -32,13 +33,17 @@ def main(grammar_file, graph_file, args):
     remove_terminals(grammar, inverse_grammar)
 
     # supposing that matrices being altered in-place
+    if args.type != 'bool':
+        to_type(matrices, args.type)
     if not args.on_cpu:
-        matrices_to_gpu(matrices)
+        to_gpu(matrices)
 
     _, time_elapsed = iterate_on_grammar(grammar, inverse_grammar, matrices)
 
     if not args.on_cpu:
-        matrices_from_gpu(matrices)
+        from_gpu(matrices)
+    if args.type != 'bool':
+        from_type(matrices, args.type, graph_size)
 
     get_solution(matrices, args.output)
     print(int(1000 * (time_elapsed + 0.0005)))
@@ -89,6 +94,7 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', type=str, help='Path to output file')
     parser.add_argument('-v', '--verbose', action='store_true', help='Print logs into console')
     parser.add_argument('-c', '--on_cpu', action='store_true', help='Naive multiplication on CPU')
+    parser.add_argument('-t', '--type', default='bool', choices=['bool', 'uint8', 'uint32'], help='Type for booleans to be packed in')
     args = parser.parse_args()
     if args.output is None:
         args.output = sys.stdout
