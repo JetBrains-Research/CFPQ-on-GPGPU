@@ -5,8 +5,11 @@ from collections import defaultdict
 from functools import wraps
 
 import numpy as np
+
 from math_utils import get_boolean_adjacency_matrices, remove_terminals
 from parsing_utils import parse_graph, parse_grammar, products_set
+from matmul import update_matrix_cpu, update_matrix_gpu, matrices_from_gpu, matrices_to_gpu
+
 
 VERBOSE = False
 
@@ -29,7 +32,14 @@ def main(grammar_file, graph_file, args):
     remove_terminals(grammar, inverse_grammar)
 
     # supposing that matrices being altered in-place
+    if not args.on_cpu:
+        matrices_to_gpu(matrices)
+
     _, time_elapsed = iterate_on_grammar(grammar, inverse_grammar, matrices)
+
+    if not args.on_cpu:
+        matrices_from_gpu(matrices)
+
     get_solution(matrices, args.output)
     print(int(1000 * (time_elapsed + 0.0005)))
 
@@ -64,7 +74,7 @@ def iterate_on_grammar(grammar, inverse_grammar, matrices):
     while to_recalculate:
         head, body = to_recalculate.pop()
         assert type(body) is tuple, 'Body is either str or tuple, not {}'.format(type(body))
-        is_changed = ...  # Awesome multiplication methods here
+        is_changed = update_matrix(matrices, head, body)
         if not is_changed:
             continue
         for product in inverse_by_nonterm[head]:
@@ -76,11 +86,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('grammar', type=str, help='File with grammar in CNF')
     parser.add_argument('graph', type=str, help='Path to a directional graph')
-    parser.add_argument('--output', type=str, default=None, help='Path to output file', required=False)
+    parser.add_argument('-o', '--output', type=str, help='Path to output file')
     parser.add_argument('-v', '--verbose', action='store_true', help='Print logs into console')
+    parser.add_argument('-c', '--on_cpu', action='store_true', help='Naive multiplication on CPU')
     args = parser.parse_args()
     if args.output is None:
         args.output = sys.stdout
     VERBOSE = args.verbose
+    update_matrix = update_matrix_cpu if args.on_cpu else update_matrix_gpu
 
     main(args.grammar, args.graph, args=args)
