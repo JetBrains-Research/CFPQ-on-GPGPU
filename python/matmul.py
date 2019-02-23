@@ -28,10 +28,17 @@ def update_matrix_gpu(matrices, head, body, shared_memory=False):
     blockspergrid_y = int(math.ceil(body_second_mat.shape[1] / threadsperblock[1]))
     blockspergrid = (blockspergrid_x, blockspergrid_y)
 
-    matmul_by_type = {'bool': matmul_bool, 'uint32': matmul_uint32}
+    global size
     mat_type = str(head_mat.dtype)
-    if mat_type in matmul_by_type:
-        matmul_method = matmul_by_type[mat_type][blockspergrid, threadsperblock]
+
+    if mat_type == 'bool':
+        matmul_method = matmul_bool[blockspergrid, threadsperblock]
+    elif mat_type == 'uint8':
+        matmul_method = matmul_uint[blockspergrid, threadsperblock]
+        size = 8
+    elif mat_type == 'uint32':
+        matmul_method = matmul_uint[blockspergrid, threadsperblock]
+        size = 32
     else:
         raise ValueError('GPU multiplication of matrices type {} is not supported'.format(mat_type))
 
@@ -57,9 +64,8 @@ def matmul_bool(A, B, C, is_changed):
 
 
 @cuda.jit
-def matmul_uint32(A, B, C, is_changed):
+def matmul_uint(A, B, C, is_changed):
     row, col = cuda.grid(2)
-    size = 32
     if row >= C.shape[0] or col >= C.shape[1]:
         return
     value = 0
