@@ -13,13 +13,15 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
     }
 }
 
+using namespace gpu_lib;
+
 __device__ bool matrix_was_changed;
 
-inline int rows(int N) {
+int gpu_lib::rows(int N) {
 	return N / TYPE_SIZE + (N % TYPE_SIZE ? 1 : 0);
 }
 
-inline int cols(int N) {
+int gpu_lib::cols(int N) {
 	return N;
 }
 
@@ -95,7 +97,7 @@ __global__ void matrix_add_to_left(TYPE *A, TYPE *B, int cols) {
 	or_value(&A[index], B[index]);
 }
 
-void synchronize() {
+void gpu_lib::synchronize() {
 	cudaDeviceSynchronize();
 }
 
@@ -103,33 +105,33 @@ void set_value(int N, TYPE *d_M, int val) {
 	cuda_handle_error(cudaMemset(d_M, val, matrix_memsize(N)));
 }
 
-TYPE * device_matrix_alloc(int N) {
+TYPE * gpu_lib::device_matrix_alloc(int N) {
 	TYPE *d_M;
 	cuda_handle_error(cudaMalloc(reinterpret_cast<void **>(&d_M), matrix_memsize(N)));
 
 	return d_M;
 }
 
-void device_matrix_dealloc(TYPE *M) {
+void gpu_lib::device_matrix_dealloc(TYPE *M) {
 	cuda_handle_error(cudaFree(M));
 }
 
-TYPE * host_matrix_calloc(int N) {
+TYPE * gpu_lib::host_matrix_calloc(int N) {
     TYPE *M;
     cuda_handle_error(cudaMallocHost(reinterpret_cast<void **>(&M), matrix_memsize(N)));
     set_value(N, M, 0);
 	return M;
 }
 
-void host_matrix_dealloc(TYPE *M) {
+void gpu_lib::host_matrix_dealloc(TYPE *M) {
 	cuda_handle_error(cudaFreeHost(M));
 }
 
-void gpu_to_cpu_transfer_async(int N, TYPE *d_M, TYPE *h_M) {
+void gpu_lib::gpu_to_cpu_transfer_async(int N, TYPE *d_M, TYPE *h_M) {
 	cuda_handle_error(cudaMemcpyAsync(h_M, d_M, matrix_memsize(N), cudaMemcpyDeviceToHost));
 }
 
-void cpu_to_gpu_transfer_async(int N, TYPE *h_M, TYPE *d_M) {
+void gpu_lib::cpu_to_gpu_transfer_async(int N, TYPE *h_M, TYPE *d_M) {
 	cuda_handle_error(cudaMemcpyAsync(d_M, h_M, matrix_memsize(N), cudaMemcpyHostToDevice));
 }
 
@@ -145,7 +147,7 @@ bool get_flag() {
 	return flag;
 }
 
-bool matrix_product_add_wrapper(TYPE *A, TYPE *B, TYPE *C, int N, TYPE *tmp_matrix) {
+bool gpu_lib::matrix_product_add_wrapper(TYPE *A, TYPE *B, TYPE *C, int N, TYPE *tmp_matrix) {
 	bool safe = (A == C) || (B == C);
 	dim3 mul_threads(THREADS_PER_BLOCK);
 	dim3 mul_blocks(cols(N) / THREADS_PER_BLOCK + (cols(N) % THREADS_PER_BLOCK ? 1 : 0), rows(N));

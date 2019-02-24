@@ -18,11 +18,11 @@ public:
     bool changed;
 
     explicit gpuMatrix(unsigned n) : Matrix(n) {
-        matrix_host = host_matrix_calloc(N);
+        matrix_host = gpu_lib::host_matrix_calloc(N);
     };
 
     ~gpuMatrix() {
-        host_matrix_dealloc(matrix_host);
+        gpu_lib::host_matrix_dealloc(matrix_host);
     };
 
     static void set_N(int n);
