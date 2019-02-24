@@ -2,7 +2,6 @@
 #ifndef CFPQ_CUDA_MULTIPLICATION_H
 #define CFPQ_CUDA_MULTIPLICATION_H
 
-#include <stdint.h>
 #include "parameters.h"
 
 

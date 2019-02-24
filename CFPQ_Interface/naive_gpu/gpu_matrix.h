@@ -27,9 +27,9 @@ public:
 
     static void set_N(int n);
 
-    void set_bit(unsigned row, unsigned col) override;
+    void set_bit(unsigned int row, unsigned int col) override;
 
-    unsigned int get_bit(unsigned row, unsigned col) override;
+    unsigned int get_bit(unsigned int row, unsigned int col) override;
 
     bool add_mul(Matrix *left, Matrix *right) override;
 
