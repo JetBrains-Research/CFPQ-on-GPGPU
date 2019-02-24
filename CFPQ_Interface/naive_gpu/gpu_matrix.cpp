@@ -13,11 +13,11 @@ void gpuMatrix::set_N(int n) {
 }
 
 void gpuMatrix::set_bit(unsigned int row, unsigned col) {
-    matrix_host[row * cols(N) + (col / 32)] |= 1U << (31 - (col % 32));
+    matrix_host[(row / 32) * cols(N) + col] |= 1U << (31 - (row % 32));
 }
 
 unsigned int gpuMatrix::get_bit(unsigned int row, unsigned col) {
-    return matrix_host[row * cols(N) + (col / 32)] & 1U << (31 - (col % 32)) ? 1 : 0;
+    return matrix_host[(row / 32) * cols(N) + col] & 1U << (31 - (row % 32)) ? 1 : 0;
 }
 
 bool gpuMatrix::add_mul(Matrix *left, Matrix *right) {

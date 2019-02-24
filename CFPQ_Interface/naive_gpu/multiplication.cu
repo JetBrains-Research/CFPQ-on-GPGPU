@@ -17,24 +17,12 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
 
 __device__ bool is_changed;
 
-// size_t matrix_memsize;
-// uint *tmp_matrix;
-
-// void initialize(int N_inp) {
-// 	N = N_inp;
-// 	rows = N;
-// 	cols = N / largest_pow2 + (N % largest_pow2 ? 1 : 0);
-// 	matrix_memsize = rows * cols * sizeof(uint);
-
-// 	gpuErrchk(cudaMalloc(reinterpret_cast<void **>(&tmp_matrix), matrix_memsize));
-// }
-
 inline int rows(int N) {
-	return N;
+	return N / largest_pow2 + (N % largest_pow2 ? 1 : 0);
 }
 
 inline int cols(int N) {
-	return N / largest_pow2 + (N % largest_pow2 ? 1 : 0);
+	return N;
 }
 
 inline size_t matrix_memsize(int N) {
@@ -45,20 +33,29 @@ __global__ void DummyMulAdd(uint *A, uint *B, uint *C, int cols) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y;
 
-    if (x >= cols) {
-        return;
-    }
+	int rows = cols / largest_pow2 + (cols % largest_pow2 ? 1 : 0);
+
+	__shared__ uint A_shared[threads_x];
 
 	uint acc = 0;
-	uint a_el;
-	for (uint i = 0; i < cols; ++i) {
-		a_el = A[y * cols + i];
+	uint b_el;
+	for (uint i = 0; i < rows; ++i) {
+	    if (i == (rows - 1) && x >= cols) {
+            return;
+	    }
+	    if ((i % (threads_x / largest_pow2)) == 0) {
+	        A_shared[threadIdx.x] = A[y*cols + i * largest_pow2 + threadIdx.x];
+	        if (threads_x > 32) {
+	            __syncthreads();
+	        }
+	    }
+		b_el = B[i * cols + x];
 		#pragma unroll
 		for (uint b = 0; b < 32; ++b) {
-			if (a_el & 1) {
-				acc |= B[x + 32 * cols * i + cols * (31 - b)];
+			if (b_el & 1) {
+				acc |= A_shared[(i % (threads_x / largest_pow2))*largest_pow2 + (largest_pow2 - 1 - b)];
 			}
-			a_el >>= 1;
+			b_el >>= 1;
 		}
 	}
 
@@ -77,22 +74,31 @@ __global__ void DummyMul(uint *A, uint *B, uint *C, int cols) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int y = blockIdx.y;
 
-    if (x >= cols) {
-        return;
-    }
+    int rows = cols / largest_pow2 + (cols % largest_pow2 ? 1 : 0);
 
-	uint acc = 0;
-	uint a_el;
-	for (uint i = 0; i < cols; ++i) {
-		a_el = A[y * cols + i];
-		#pragma unroll
-		for (uint b = 0; b < 32; ++b) {
-			if (a_el & 1) {
-				acc |= B[x + 32 * cols * i + cols * (31 - b)];
-			}
-			a_el >>= 1;
-		}
-	}
+    __shared__ uint A_shared[threads_x];
+
+    uint acc = 0;
+    uint b_el;
+    for (uint i = 0; i < rows; ++i) {
+        if (i == (rows - 1) && x >= cols) {
+            return;
+        }
+        if ((i % (threads_x / largest_pow2)) == 0) {
+            A_shared[threadIdx.x] = A[y*cols + i * largest_pow2 + threadIdx.x];
+            if (threads_x > 32) {
+                __syncthreads();
+            }
+        }
+        b_el = B[i * cols + x];
+        #pragma unroll
+        for (uint b = 0; b < 32; ++b) {
+            if (b_el & 1) {
+                acc |= A_shared[(i % (threads_x / largest_pow2))*largest_pow2 + (largest_pow2 - 1 - b)];
+            }
+            b_el >>= 1;
+        }
+    }
 
 	C[y * cols + x] = acc;
 }
