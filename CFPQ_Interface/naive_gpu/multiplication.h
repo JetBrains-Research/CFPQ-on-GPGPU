@@ -1,6 +1,9 @@
-#pragma once
+
+#ifndef CFPQ_CUDA_MULTIPLICATION_H
+#define CFPQ_CUDA_MULTIPLICATION_H
 
 #include <stdint.h>
+#include "parameters.h"
 
 
 int rows(int N);
@@ -9,12 +12,18 @@ int cols(int N);
 
 void synchronize();
 
-uint32_t * device_matrix_alloc(int N);
+TYPE * device_matrix_alloc(int N);
 
-uint32_t * host_matrix_calloc(int N);
+void device_matrix_dealloc(TYPE *M);
 
-void gpu2cpu(int N, uint32_t *d_M, uint32_t *h_M);
+TYPE * host_matrix_calloc(int N);
 
-void cpu2gpu(int N, uint32_t *h_M, uint32_t *d_M);
+void host_matrix_dealloc(TYPE *M);
 
-bool MatrixMulAdd(uint32_t *A, uint32_t *B, uint32_t *C, int N, uint32_t *tmp);
+void gpu_to_cpu_transfer_async(int N, TYPE *d_M, TYPE *h_M);
+
+void cpu_to_gpu_transfer_async(int N, TYPE *h_M, TYPE *d_M);
+
+bool matrix_product_add_wrapper(TYPE *A, TYPE *B, TYPE *C, int N, TYPE *tmp);
+
+#endif //CFPQ_CUDA_MULTIPLICATION_H

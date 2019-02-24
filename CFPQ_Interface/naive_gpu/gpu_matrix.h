@@ -3,32 +3,33 @@
 #define GPU_MATRIX_H
 
 #include "multiplication.h"
+#include "parameters.h"
 #include "../../cfpq-cpp/Matrix.h"
 
 class gpuMatrix : public Matrix {
 
-    uint32_t *matrix_host;
-    uint32_t *matrix_device;
+    TYPE *matrix_host;
+    TYPE *matrix_device;
     
 public:
     static int N;
-    static uint32_t *tmp_matrix;
+    static TYPE *tmp_matrix;
     bool changed_prev;
     bool changed;
 
-    explicit gpuMatrix(unsigned int n) : Matrix(n) {
+    explicit gpuMatrix(unsigned n) : Matrix(n) {
         matrix_host = host_matrix_calloc(N);
     };
 
     ~gpuMatrix() {
-        //dealloc
+        host_matrix_dealloc(matrix_host);
     };
 
     static void set_N(int n);
 
-    void set_bit(unsigned int row, unsigned col) override;
+    void set_bit(unsigned row, unsigned col) override;
 
-    unsigned int get_bit(unsigned int row, unsigned col) override;
+    unsigned int get_bit(unsigned row, unsigned col) override;
 
     bool add_mul(Matrix *left, Matrix *right) override;
 

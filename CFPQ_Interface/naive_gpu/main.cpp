@@ -1,6 +1,5 @@
 #include <iostream>
 #include "gpu_matrix.h"
-#include "multiplication.h"
 #include "../../cfpq-cpp/Grammar.h"
 
 int main(int argc, char *argv[]) {
