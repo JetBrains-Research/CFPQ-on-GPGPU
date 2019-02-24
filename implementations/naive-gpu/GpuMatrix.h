@@ -2,8 +2,8 @@
 #ifndef GPU_MATRIX_H
 #define GPU_MATRIX_H
 
-#include "multiplication.h"
-#include "parameters.h"
+#include "Multiplication.h"
+#include "Parameters.h"
 #include "../../cfpq-cpp/Matrix.h"
 
 class gpuMatrix : public Matrix {

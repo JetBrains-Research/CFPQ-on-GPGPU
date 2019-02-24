@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include "gpu_matrix.h"
+#include "GpuMatrix.h"
 #include "../../cfpq-cpp/Grammar.h"
 
 

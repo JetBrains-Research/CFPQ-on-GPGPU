@@ -1,7 +1,7 @@
 
 #include <iostream>
-#include "multiplication.h"
-#include "parameters.h"
+#include "Multiplication.h"
+#include "Parameters.h"
 
 #define cuda_handle_error(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true) {

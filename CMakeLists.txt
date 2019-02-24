@@ -7,8 +7,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(naiveGPU CFPQ_Interface/naive_gpu/gpu_matrix.h CFPQ_Interface/naive_gpu/gpu_matrix.cpp
-        CFPQ_Interface/naive_gpu/multiplication.cu CFPQ_Interface/naive_gpu/multiplication.h
-        CFPQ_Interface/naive_gpu/parameters.h
+add_executable(naiveGPU implementations/naive-gpu/GpuMatrix.h implementations/naive-gpu/GpuMatrix.cpp
+        implementations/naive-gpu/Multiplication.cu implementations/naive-gpu/Multiplication.h
+        implementations/naive-gpu/Parameters.h
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
-        CFPQ_Interface/naive_gpu/main.cpp CFPQ_Interface/naive_gpu/parameters.h)
+        implementations/naive-gpu/main.cpp implementations/naive-gpu/Parameters.h)

@@ -1,8 +1,8 @@
 
-#include "multiplication.h"
+#include "Multiplication.h"
 #include "../../cfpq-cpp/Matrix.h"
-#include "gpu_matrix.h"
-#include "parameters.h"
+#include "GpuMatrix.h"
+#include "Parameters.h"
 
 
 int gpuMatrix::N;

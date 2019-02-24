@@ -2,7 +2,7 @@
 #ifndef CFPQ_CUDA_MULTIPLICATION_H
 #define CFPQ_CUDA_MULTIPLICATION_H
 
-#include "parameters.h"
+#include "Parameters.h"
 
 namespace gpu_lib {
 
