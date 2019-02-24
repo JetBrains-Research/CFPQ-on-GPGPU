@@ -1,8 +1,7 @@
 #include <iostream>
-#include "Grammar.h"
-#include "Graph.h"
 #include "gpu_matrix.h"
 #include "multiplication.h"
+#include "../../cfpq-cpp/Grammar.h"
 
 int main(int argc, char *argv[]) {
     Grammar grammar = Grammar(argv[1]);
