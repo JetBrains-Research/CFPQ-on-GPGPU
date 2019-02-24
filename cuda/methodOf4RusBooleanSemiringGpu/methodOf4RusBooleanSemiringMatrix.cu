@@ -45,12 +45,12 @@ void MethodOf4RusMatricesEnv::environment_postprocessing
 
 void MethodOf4RusMatrix::set_bit(unsigned int row, unsigned col) {
     matrix_host[row * cols + (col / SQUEEZE)] |= 
-                                    1L << (31 - (col % SQUEEZE));
+                                    1U << (31 - (col % SQUEEZE));
 }
 
 unsigned int MethodOf4RusMatrix::get_bit(unsigned int row, unsigned col) {
     return (matrix_host [row * cols + (col / SQUEEZE)] &
-                                     1L << (31 - (col % SQUEEZE)) == 0) ? 0 : 1;
+                                     1U << (31 - (col % SQUEEZE))) ? 1 : 0;
 }
 
 bool MethodOf4RusMatrix::add_mul(Matrix *left, Matrix *right) {
