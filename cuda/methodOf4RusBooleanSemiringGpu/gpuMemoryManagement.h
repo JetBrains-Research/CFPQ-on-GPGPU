@@ -5,7 +5,7 @@
 #include "Constants.h"
 
 namespace gpu_m4ri {
-    
+
     TYPE ** allocate_tables(int num_tables, int num_rows, int num_cols);
 
     void delete_tables(TYPE **tables, int num_tables);

@@ -1,6 +1,6 @@
 
 #include "Multiplication.h"
-#include "../../cfpq-cpp/Matrix.h"
+#include "Matrix.h"
 #include "GpuMatrix.h"
 #include "Parameters.h"
 

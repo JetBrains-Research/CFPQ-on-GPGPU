@@ -4,7 +4,7 @@
 
 #include "Multiplication.h"
 #include "Parameters.h"
-#include "../../cfpq-cpp/Matrix.h"
+#include "Matrix.h"
 
 class gpuMatrix : public Matrix {
 

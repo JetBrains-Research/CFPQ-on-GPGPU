@@ -7,8 +7,26 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(naiveGPU implementations/naive-gpu/GpuMatrix.h implementations/naive-gpu/GpuMatrix.cpp
-        implementations/naive-gpu/Multiplication.cu implementations/naive-gpu/Multiplication.h
-        implementations/naive-gpu/Parameters.h
+include_directories(${CMAKE_SOURCE_DIR}/cfpq-cpp)
+
+add_executable(naiveGPU
+        cuda/naive-gpu/GpuMatrix.h cuda/naive-gpu/GpuMatrix.cpp
+        cuda/naive-gpu/Multiplication.cu cuda/naive-gpu/Multiplication.h
+        cuda/naive-gpu/Parameters.h
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
-        implementations/naive-gpu/main.cpp implementations/naive-gpu/Parameters.h)
+        cuda/naive-gpu/main.cpp cuda/naive-gpu/Parameters.h
+        )
+
+add_executable(m4riGPU
+        cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringGpu.cu
+        cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringMatrix.cu
+        cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringGpu.h
+        cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringGpu.h
+        cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringMatrix.cu
+        cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringMatrix.h
+        cuda/methodOf4RusBooleanSemiringGpu/Constants.h
+        cuda/methodOf4RusBooleanSemiringGpu/gpuMemoryManagement.cu
+        cuda/methodOf4RusBooleanSemiringGpu/gpuMemoryManagement.h
+        cuda/methodOf4RusBooleanSemiringGpu/cfpqM4RusGpu.cpp
+        cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
+        )
