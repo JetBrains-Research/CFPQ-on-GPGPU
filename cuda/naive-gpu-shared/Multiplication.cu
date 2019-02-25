@@ -35,18 +35,25 @@ __device__ TYPE row_column_product(TYPE *A, TYPE *B, int cols) {
 	int rows = cols / TYPE_SIZE + (cols % TYPE_SIZE ? 1 : 0);
 	int row_start = blockIdx.y * cols;
 
-	if (x >= cols) {
-		return 0;
-	}
+	__shared__ TYPE A_shared[THREADS_PER_BLOCK];
 
 	TYPE acc = 0;
 	TYPE b_el;
 	for (TYPE i = 0; i < rows; ++i) {
+		if (i == (rows - 1) && x >= cols) {
+			return 0;
+		}
+		if ((i % (THREADS_PER_BLOCK / TYPE_SIZE)) == 0) {
+			A_shared[threadIdx.x] = A[row_start + i * TYPE_SIZE + threadIdx.x];
+			if (THREADS_PER_BLOCK > 32) {
+				__syncthreads();
+			}
+		}
 		b_el = B[i * cols + x];
 		#pragma unroll 32
 		for (TYPE b = 0; b < 32; ++b) {
 			if (b_el & 1) {
-				acc |= A[row_start + i * TYPE_SIZE + (TYPE_SIZE - 1 - b)];
+				acc |= A_shared[(i % (THREADS_PER_BLOCK / TYPE_SIZE)) * TYPE_SIZE + (TYPE_SIZE - 1 - b)];
 			}
 			b_el >>= 1;
 		}

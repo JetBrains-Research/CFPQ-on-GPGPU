@@ -10,11 +10,23 @@ set(CMAKE_CXX_STANDARD 11)
 include_directories(${CMAKE_SOURCE_DIR}/cfpq-cpp)
 
 add_executable(naiveGPU
-        cuda/naive-gpu/GpuMatrix.h cuda/naive-gpu/GpuMatrix.cpp
-        cuda/naive-gpu/Multiplication.cu cuda/naive-gpu/Multiplication.h
+        cuda/naive-gpu/GpuMatrix.h
+        cuda/naive-gpu/GpuMatrix.cpp
+        cuda/naive-gpu/Multiplication.cu
+        cuda/naive-gpu/Multiplication.h
         cuda/naive-gpu/Parameters.h
+        cuda/naive-gpu/main.cpp
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
-        cuda/naive-gpu/main.cpp cuda/naive-gpu/Parameters.h
+        )
+
+add_executable(naiveGPU-shared
+        cuda/naive-gpu-shared/GpuMatrix.h
+        cuda/naive-gpu-shared/GpuMatrix.cpp
+        cuda/naive-gpu-shared/Multiplication.cu
+        cuda/naive-gpu-shared/Multiplication.h
+        cuda/naive-gpu-shared/Parameters.h
+        cuda/naive-gpu-shared/main.cpp
+        cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
         )
 
 add_executable(m4riGPU
