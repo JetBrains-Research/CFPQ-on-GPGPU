@@ -1,2 +1,3 @@
-b s1 s3b SCOs3 b s2s1 SCOR
-s2 SCO
+version https://git-lfs.github.com/spec/v1
+oid sha256:57e9a78db693809deaa50f8862cfbe9cdb09abc7fe781c506aa597e30a3700b5
+size 37

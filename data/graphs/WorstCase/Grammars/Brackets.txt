@@ -1,5 +1,3 @@
-s a b
-s a s1
-s1 s b
-a A
-b B
+version https://git-lfs.github.com/spec/v1
+oid sha256:f78817fa4772b31a3c08f07f3ebf7b24112bbc4e1243190571bc9e3636cc1a82
+size 31
