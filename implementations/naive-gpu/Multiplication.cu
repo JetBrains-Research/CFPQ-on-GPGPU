@@ -31,7 +31,7 @@ inline size_t matrix_memsize(int N) {
 }
 
 __device__ TYPE row_column_product(TYPE *A, TYPE *B, int cols) {
-	int x = blockIdx.x*blockDim.x + threadIdx.x;
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int rows = cols / TYPE_SIZE + (cols % TYPE_SIZE ? 1 : 0);
 	int row_start = blockIdx.y * cols;
 
@@ -44,16 +44,16 @@ __device__ TYPE row_column_product(TYPE *A, TYPE *B, int cols) {
 			return 0;
 		}
 		if ((i % (THREADS_PER_BLOCK / TYPE_SIZE)) == 0) {
-			A_shared[threadIdx.x] = A[row_start + i*TYPE_SIZE + threadIdx.x];
+			A_shared[threadIdx.x] = A[row_start + i * TYPE_SIZE + threadIdx.x];
 			if (THREADS_PER_BLOCK > 32) {
 				__syncthreads();
 			}
 		}
-		b_el = B[i*cols + x];
+		b_el = B[i * cols + x];
 		#pragma unroll 32
 		for (TYPE b = 0; b < 32; ++b) {
 			if (b_el & 1) {
-				acc |= A_shared[(i % (THREADS_PER_BLOCK / TYPE_SIZE))*TYPE_SIZE + (TYPE_SIZE - 1 - b)];
+				acc |= A_shared[(i % (THREADS_PER_BLOCK / TYPE_SIZE)) * TYPE_SIZE + (TYPE_SIZE - 1 - b)];
 			}
 			b_el >>= 1;
 		}
@@ -71,7 +71,7 @@ __device__ void or_value(TYPE *M, TYPE val) {
 }
 
 __global__ void matrix_product_add(TYPE *A, TYPE *B, TYPE *C, int cols) {
-	int x = blockIdx.x*blockDim.x + threadIdx.x;
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int row_start = blockIdx.y * cols;
 
 	TYPE acc = row_column_product(A, B, cols);
@@ -82,7 +82,7 @@ __global__ void matrix_product_add(TYPE *A, TYPE *B, TYPE *C, int cols) {
 }
 
 __global__ void matrix_product(TYPE *A, TYPE *B, TYPE *C, int cols) {
-	int x = blockIdx.x*blockDim.x + threadIdx.x;
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int row_start = blockIdx.y * cols;
 
 	TYPE acc = row_column_product(A, B, cols);
@@ -91,9 +91,9 @@ __global__ void matrix_product(TYPE *A, TYPE *B, TYPE *C, int cols) {
 }
 
 __global__ void matrix_add_to_left(TYPE *A, TYPE *B, int cols) {
-	int index = blockIdx.y*cols + blockIdx.x*blockDim.x + threadIdx.x;
+	int index = blockIdx.y * cols + blockIdx.x * blockDim.x + threadIdx.x;
 
-    if ((blockIdx.x*blockDim.x + threadIdx.x) >= cols) return;
+    if ((blockIdx.x * blockDim.x + threadIdx.x) >= cols) return;
 
 	or_value(&A[index], B[index]);
 }
