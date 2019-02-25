@@ -2,7 +2,6 @@
 #include "methodOf4RusBooleanSemiringGpu.h"
 
 #define lsb(i) ((i) & -(i)) // return least significant bit
-#define BITS sizeof(TYPE) * 8// aka 32
 
 namespace gpu_m4ri {
 
@@ -89,7 +88,7 @@ namespace gpu_m4ri {
         
             for(int t = 0; t < BLOCK_SIZE_COL; t++) {
                 composite_key = local_A[threadIdx.y][t];
-                for(int j = 0; j < 4;j++) {
+                for(int j = 0; j < 4; j++) {
                     T = lookup_tables[BLOCK_SIZE_COL * i * 4 + t * 4 + j];
                     actual_key = get_actual_key(composite_key, j);
                     value |= T[actual_key * cols_table + col_in_T];
@@ -99,7 +98,7 @@ namespace gpu_m4ri {
         __syncthreads();
         if(small_step) {
             int cur_step = full_steps;
-            if(threadIdx.x + cur_step * BLOCK_SIZE_COL < cols  && row_y < rows){
+            if(threadIdx.x + cur_step * BLOCK_SIZE_COL < cols  && row_y < rows) {
                 tmp = __brev(A[ row_y * cols + threadIdx.x + cur_step * BLOCK_SIZE_COL]); // reverse
                 local_A[threadIdx.y][threadIdx.x] = tmp;
             }
@@ -113,7 +112,7 @@ namespace gpu_m4ri {
         
             for(int t = 0; t < small_step; t++) {
                 composite_key = local_A[threadIdx.y][t];
-                for(int j = 0; j < 4;j++) {
+                for(int j = 0; j < 4; j++) {
                     T = lookup_tables[cur_step * BLOCK_SIZE_COL * 4 + t * 4 + j];
                     actual_key = get_actual_key(composite_key, j);
                     value |= T[actual_key * cols_table + col_in_T];
@@ -139,7 +138,7 @@ namespace gpu_m4ri {
         //setup configuration for table kernel
         dim3 dimBlock_table_kernel(BLOCK_SIZE_COL,BLOCK_SIZE_ROW);
     
-        dim3 dimGrid_table_n   ((tables.cols_n + BLOCK_SIZE_COL - 1) / BLOCK_SIZE_COL,
+        dim3 dimGrid_table_n((tables.cols_n + BLOCK_SIZE_COL - 1) / BLOCK_SIZE_COL,
                            (rows + BLOCK_SIZE_ROW * K - 1) / (BLOCK_SIZE_ROW * K));
     
         dim3 dimGrid_table_last((tables.cols_last + BLOCK_SIZE_COL-1) / BLOCK_SIZE_COL,
@@ -148,10 +147,10 @@ namespace gpu_m4ri {
         //setup configuration for mul kernel
         dim3 dimBlock_m4ri(BLOCK_SIZE_COL,BLOCK_SIZE_ROW);
     
-        dim3 dimGrid_m4ri_n   ( (tables.cols_n + BLOCK_SIZE_COL - 1) / BLOCK_SIZE_COL,
+        dim3 dimGrid_m4ri_n((tables.cols_n + BLOCK_SIZE_COL - 1) / BLOCK_SIZE_COL,
                             ((rows+BLOCK_SIZE_ROW - 1) / BLOCK_SIZE_ROW));
     
-        dim3 dimGrid_m4ri_last( (tables.cols_last + BLOCK_SIZE_COL - 1) / BLOCK_SIZE_COL,
+        dim3 dimGrid_m4ri_last((tables.cols_last + BLOCK_SIZE_COL - 1) / BLOCK_SIZE_COL,
                             ((rows + BLOCK_SIZE_ROW - 1) / BLOCK_SIZE_ROW));
     
         for(int i = 0; i < tables.num_launches; i++) {
