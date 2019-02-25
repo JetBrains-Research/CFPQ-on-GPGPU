@@ -1,23 +1,25 @@
 
 #include "methodOf4RusBooleanSemiringGpu.h"
-#include "gpu_memory_management.h"
-#include "gpu_timer.cu"
-#include<time.h>
+#include "gpuMemoryManagement.h"
+#include "gpuTimer.cu"
+#include <time.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <limits.h>
+#include "Constants.h"
 
-#define SQUEEZE 32
 #define BLOCK_SIZE 32
-#define BITS sizeof(__uint32_t) * 8// aka 32
+#define BITS sizeof(TYPE) * 8// aka 32
+
+using namespace gpu_m4ri;
 
 /*
  *squeeze src to dst by 32 in rows
  */
-void squeeze_to_bits_rows(const uint32_t *src, int src_rows, int src_cols, uint32_t *dst, int dst_cols) {
+void squeeze_to_bits_rows(const TYPE *src, int src_rows, int src_cols, TYPE *dst, int dst_cols) {
     for (int i = 0; i < src_rows; i++) {
         for (int j = 0; j < dst_cols; j++) {
-            __uint32_t value = 0;
+            TYPE value = 0;
             for (int n = 0; n < BITS; n++) {
                 if (src[i * src_cols + j * BITS + n] != 0) {
                     value |= 1ULL << (31 - n);
@@ -30,7 +32,7 @@ void squeeze_to_bits_rows(const uint32_t *src, int src_rows, int src_cols, uint3
 }
 
 // dummy mul for testing method of four russian
-__global__ void dummy_gpu_semiring_mul(uint32_t *a, uint32_t *b, uint32_t *c, int m, int n, int k) { 
+__global__ void dummy_gpu_semiring_mul(TYPE *a, TYPE *b, TYPE *c, int m, int n, int k) { 
     int row = blockIdx.y * blockDim.y + threadIdx.y; 
     int col = blockIdx.x * blockDim.x + threadIdx.x;
     int sum = 0;
@@ -44,14 +46,14 @@ __global__ void dummy_gpu_semiring_mul(uint32_t *a, uint32_t *b, uint32_t *c, in
     }
 }
 
-void wrapper_sdummy_semiring_mul(uint32_t *a, uint32_t *b, uint32_t *c, int rows, int cols) {
+void wrapper_sdummy_semiring_mul(TYPE *a, TYPE *b, TYPE *c, int rows, int cols) {
     dim3 dimBlock(BLOCK_SIZE, BLOCK_SIZE);
     dim3 dimGrid((cols + BLOCK_SIZE - 1) / BLOCK_SIZE, (rows + BLOCK_SIZE - 1) / BLOCK_SIZE); 
     dummy_gpu_semiring_mul<<<dimGrid,dimBlock>>>(a, b, c, rows, cols, cols);
     cudaDeviceSynchronize();
 }
  
-void rand_fill(int rows, int sparsity, uint32_t *matrix) {
+void rand_fill(int rows, int sparsity, TYPE *matrix) {
     for (int i = 0; i < rows * rows; i++) {
         if (rand() % sparsity == 0) {
             matrix[i] = 1;
@@ -71,17 +73,17 @@ int method_of_4rus_test(int rows, int table_cols_max, int sparsity) {
     Tables tables;
     GpuTimer gpuTimer = GpuTimer();
     float elapsedTime;
-    tables.initialize(rows,cols, table_cols_max);
+    tables.initialize(rows, cols, table_cols_max);
     
-    uint32_t *unsqueezed_matrixA   = allocate_matrix_host(rows, rows);
-    uint32_t *unsqueezed_matrixB   = allocate_matrix_host(rows, rows);
-    uint32_t *unsqueezed_matrixC   = allocate_matrix_host(rows, rows);
-    uint32_t *unsqueezed_matrixAXB = allocate_matrix_host(rows, rows);
+    TYPE *unsqueezed_matrixA   = allocate_matrix_host(rows, rows);
+    TYPE *unsqueezed_matrixB   = allocate_matrix_host(rows, rows);
+    TYPE *unsqueezed_matrixC   = allocate_matrix_host(rows, rows);
+    TYPE *unsqueezed_matrixAXB = allocate_matrix_host(rows, rows);
 
-    uint32_t *squeezed_matrixA   = allocate_matrix_host(rows, cols);
-    uint32_t *squeezed_matrixB   = allocate_matrix_host(rows, cols);
-    uint32_t *squeezed_matrixC   = allocate_matrix_host(rows, cols);    
-    uint32_t *squeezed_matrixAXB = allocate_matrix_host(rows, cols);
+    TYPE *squeezed_matrixA   = allocate_matrix_host(rows, cols);
+    TYPE *squeezed_matrixB   = allocate_matrix_host(rows, cols);
+    TYPE *squeezed_matrixC   = allocate_matrix_host(rows, cols);    
+    TYPE *squeezed_matrixAXB = allocate_matrix_host(rows, cols);
     
     //rand fill matrices  
     srand(time(NULL));
@@ -93,9 +95,9 @@ int method_of_4rus_test(int rows, int table_cols_max, int sparsity) {
     } 
 
     // device matrices for dummy multiplication
-    uint32_t *a_d  = allocate_matrix_device(rows, rows);
-    uint32_t *b_d  = allocate_matrix_device(rows, rows);
-    uint32_t *axb_d  = allocate_matrix_device(rows, rows);
+    TYPE *a_d  = allocate_matrix_device(rows, rows);
+    TYPE *b_d  = allocate_matrix_device(rows, rows);
+    TYPE *axb_d  = allocate_matrix_device(rows, rows);
 
     copy_host_to_device_sync(unsqueezed_matrixA, a_d, rows * rows);
     copy_host_to_device_sync(unsqueezed_matrixB, b_d, rows * rows);
@@ -118,9 +120,9 @@ int method_of_4rus_test(int rows, int table_cols_max, int sparsity) {
     
     
     // allocate device memory for squeezed
-    uint32_t * squeezed_matrixB_device = allocate_matrix_device(rows, cols);
-    uint32_t * squeezed_matrixA_device = allocate_matrix_device(rows, cols);
-    uint32_t * squeezed_matrixC_device = allocate_matrix_device(rows, cols);
+    TYPE *squeezed_matrixB_device = allocate_matrix_device(rows, cols);
+    TYPE *squeezed_matrixA_device = allocate_matrix_device(rows, cols);
+    TYPE *squeezed_matrixC_device = allocate_matrix_device(rows, cols);
 
     copy_host_to_device_sync(squeezed_matrixB, squeezed_matrixB_device, rows * cols);
     copy_host_to_device_sync(squeezed_matrixA, squeezed_matrixA_device, rows * cols);
@@ -175,6 +177,5 @@ int main(int argc, char *argv[]) {
         for(int size = initial_size; size < max_size; size += size_step) {
             method_of_4rus_test(size, table_size, sparsity); 
         }  
-        
     }
 }

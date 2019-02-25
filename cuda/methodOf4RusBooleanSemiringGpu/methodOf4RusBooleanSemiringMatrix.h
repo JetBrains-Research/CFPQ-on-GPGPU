@@ -4,18 +4,17 @@
 
 #include <vector>
 #include "Matrix.h"
-#include "gpu_memory_management.h"
+#include "gpuMemoryManagement.h"
 #include "methodOf4RusBooleanSemiringGpu.h"
-
-#define SQUEEZE 32
+#include "Constants.h"
 
 class MethodOf4RusMatricesEnv : public MatricesEnv {
 public:
 
     int size_multiple_by_32;
     int cols;
-    uint32_t *extra_matrix_device;
-    Tables tables;
+    TYPE *extra_matrix_device;
+    gpu_m4ri::Tables tables;
 
     MethodOf4RusMatricesEnv() {}
 
@@ -31,8 +30,8 @@ public:
     
     int size_multiple_by_32;
     int cols;
-    uint32_t *matrix_host;
-    uint32_t *matrix_device;
+    TYPE *matrix_host;
+    TYPE *matrix_device;
     MethodOf4RusMatricesEnv *env;
 
     explicit MethodOf4RusMatrix(unsigned int n) : Matrix(n) {
@@ -44,11 +43,11 @@ public:
         }
         cols = size_multiple_by_32 / SQUEEZE;
 
-        matrix_host = allocate_matrix_host(size_multiple_by_32, cols);
+        matrix_host = gpu_m4ri::allocate_matrix_host(size_multiple_by_32, cols);
     }
 
     ~MethodOf4RusMatrix() {
-        delete_matrix_host(matrix_host);
+        gpu_m4ri::delete_matrix_host(matrix_host);
     }
 
     void set_bit(unsigned int row, unsigned col) override;
