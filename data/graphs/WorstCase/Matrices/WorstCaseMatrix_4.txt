@@ -1,33 +1,3 @@
-0 A 1
-1 A 2
-2 A 3
-3 A 4
-4 A 5
-5 A 6
-6 A 7
-7 A 8
-8 A 9
-9 A 10
-10 A 11
-11 A 12
-12 A 13
-13 A 14
-14 A 15
-15 A 16
-16 A 0
-0 B 17
-17 B 18
-18 B 19
-19 B 20
-20 B 21
-21 B 22
-22 B 23
-23 B 24
-24 B 25
-25 B 26
-26 B 27
-27 B 28
-28 B 29
-29 B 30
-30 B 31
-31 B 0
+version https://git-lfs.github.com/spec/v1
+oid sha256:3405e90b981a45b8aa2a002ad5f4f05ad6efaefdfde9d0d2033d9885d894c60d
+size 241
