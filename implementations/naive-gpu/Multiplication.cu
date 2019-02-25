@@ -138,12 +138,12 @@ void gpu_lib::cpu_to_gpu_transfer_async(int N, TYPE *h_M, TYPE *d_M) {
 
 void set_flag() {
 	bool flag = false;
-	cuda_handle_error(cudaMemcpyToSymbol(matrix_was_changed, &flag, sizeof(bool)))
+	cuda_handle_error(cudaMemcpyToSymbol(matrix_was_changed, &flag, sizeof(bool)));
 }
 
 bool get_flag() {
 	bool flag;
-	cuda_handle_error(cudaMemcpyFromSymbol(&flag, matrix_was_changed, sizeof(bool)))
+	cuda_handle_error(cudaMemcpyFromSymbol(&flag, matrix_was_changed, sizeof(bool)));
 
 	return flag;
 }
