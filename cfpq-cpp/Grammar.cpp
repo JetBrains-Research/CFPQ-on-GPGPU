@@ -47,8 +47,8 @@ Grammar::Grammar(const string &grammar_filename) {
 }
 
 Grammar::~Grammar() {
-    for (unsigned int i = 0; i < nonterminals_count; ++i)
-        delete matrices[i];
+    for (auto &matrix: matrices)
+        delete matrix;
 }
 
 void Grammar::print_results(const string &output_filename) {
