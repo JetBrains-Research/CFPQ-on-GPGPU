@@ -13,7 +13,7 @@ namespace gpu_m4ri {
             cudaEventCreate(&start);
             cudaEventCreate(&stop);
         }
-  
+
         ~GpuTimer() {
             cudaEventDestroy(start);
             cudaEventDestroy(stop);
