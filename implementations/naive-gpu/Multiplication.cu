@@ -4,6 +4,9 @@
 #include "Parameters.h"
 
 #define cuda_handle_error(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+
+using namespace gpu_lib;
+
 inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true) {
     if (code != cudaSuccess) {
         std::cout << "GPU assert: " << cudaGetErrorString(code) << " " << file << " " << line << std::endl;
@@ -12,8 +15,6 @@ inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=t
         }
     }
 }
-
-using namespace gpu_lib;
 
 __device__ bool matrix_was_changed;
 
@@ -49,7 +50,7 @@ __device__ TYPE row_column_product(TYPE *A, TYPE *B, int cols) {
 			}
 		}
 		b_el = B[i*cols + x];
-		#pragma unroll
+		#pragma unroll 32
 		for (TYPE b = 0; b < 32; ++b) {
 			if (b_el & 1) {
 				acc |= A_shared[(i % (THREADS_PER_BLOCK / TYPE_SIZE))*TYPE_SIZE + (TYPE_SIZE - 1 - b)];
@@ -69,7 +70,7 @@ __device__ void or_value(TYPE *M, TYPE val) {
 	}
 }
 
-__global__ void matrix_product_add_to_left(TYPE *A, TYPE *B, TYPE *C, int cols) {
+__global__ void matrix_product_add(TYPE *A, TYPE *B, TYPE *C, int cols) {
 	int x = blockIdx.x*blockDim.x + threadIdx.x;
 	int row_start = blockIdx.y * cols;
 
@@ -149,20 +150,20 @@ bool get_flag() {
 
 bool gpu_lib::matrix_product_add_wrapper(TYPE *A, TYPE *B, TYPE *C, int N, TYPE *tmp_matrix) {
 	bool safe = (A == C) || (B == C);
-	dim3 mul_threads(THREADS_PER_BLOCK);
-	dim3 mul_blocks(cols(N) / THREADS_PER_BLOCK + (cols(N) % THREADS_PER_BLOCK ? 1 : 0), rows(N));
+	dim3 threads(THREADS_PER_BLOCK);
+	dim3 blocks(cols(N) / THREADS_PER_BLOCK + (cols(N) % THREADS_PER_BLOCK ? 1 : 0), rows(N));
 
     set_flag();
 	if (safe) {
-		matrix_product <<<mul_blocks, mul_threads>>> (A, B, tmp_matrix, cols(N));
+		matrix_product <<<blocks, threads>>> (A, B, tmp_matrix, cols(N));
 		synchronize();
 		cuda_handle_error(cudaGetLastError());
-		matrix_add_to_left <<<mul_blocks, mul_threads>>> (C, tmp_matrix, cols(N));
+		matrix_add_to_left <<<blocks, threads>>> (C, tmp_matrix, cols(N));
 		synchronize();
 		cuda_handle_error(cudaGetLastError());
 	}
 	else {
-		matrix_product_add_to_left <<<mul_blocks, mul_threads>>> (A, B, C, cols(N));
+		matrix_product_add <<<blocks, threads>>> (A, B, C, cols(N));
 		synchronize();
 		cuda_handle_error(cudaGetLastError());
 	}

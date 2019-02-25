@@ -3,7 +3,6 @@
 #include "GpuMatrix.h"
 #include "../../cfpq-cpp/Grammar.h"
 
-
 int main(int argc, char *argv[]) {
     Grammar grammar = Grammar(argv[1]);
     Graph graph = Graph(argv[2]);

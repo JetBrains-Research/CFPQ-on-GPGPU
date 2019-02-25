@@ -4,7 +4,6 @@
 #include "GpuMatrix.h"
 #include "Parameters.h"
 
-
 int gpuMatrix::N;
 
 TYPE *gpuMatrix::tmp_matrix;
@@ -69,7 +68,7 @@ void gpuMatricesEnv::environment_postprocessing(const std::vector<Matrix *> &mat
         gpu_matrix->transfer_from_gpu();
     }
     gpu_lib::synchronize();
-    for (Matrix *matrix: matrices) {
+    for (auto *matrix: matrices) {
         auto *gpu_matrix = dynamic_cast<gpuMatrix *>(matrix);
         gpu_matrix->deallocate_device_matrix();
     }
