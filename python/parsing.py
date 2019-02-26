@@ -28,8 +28,8 @@ def parse_graph(_file):
             assert len(terms) == 3, terms
             from_vert, to_vert = int(terms[0]), int(terms[2].rstrip(','))
             max_node = max(max_node, from_vert, to_vert)
-            result_graph[from_vert - 1][to_vert - 1] = terms[1]
-    return result_graph, max_node
+            result_graph[from_vert][to_vert] = terms[1]
+    return result_graph, max_node + 1
 
 
 def products_set(grammar):

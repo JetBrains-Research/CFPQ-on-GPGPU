@@ -2,7 +2,6 @@ import argparse
 import sys
 import time
 from collections import defaultdict
-
 import numpy as np
 
 from math_utils import get_boolean_adjacency_matrices, remove_terminals
@@ -19,11 +18,9 @@ def main(grammar_file, graph_file, args):
     grammar, inverse_grammar = parse_grammar(grammar_file)
     graph, graph_size = parse_graph(graph_file)
 
-    matrices = get_boolean_adjacency_matrices(grammar, inverse_grammar, graph, graph_size)
+    matrices = get_boolean_adjacency_matrices(grammar, inverse_grammar, graph, graph_size, mat_type=args.type)
     remove_terminals(grammar, inverse_grammar)
 
-    if args.type != 'bool':
-        to_type(matrices, args.type)
     begin_time = time.time()
     if not args.on_cpu:
         to_gpu(matrices)
@@ -47,7 +44,7 @@ def get_solution(matrices, file=sys.stdout):
         assert file is sys.stdout, f'Only allowed to print solution in file or stdout, not in {file}'
     
     for nonterminal, matrix in matrices.items():
-        pairs = (np.argwhere(matrix) +  1).T
+        pairs = np.argwhere(matrix).T
         print(nonterminal, end=' ', file=file)
         print(' '.join(map(lambda pair: ' '.join(pair), pairs.astype('str').tolist())), file=file)
 
