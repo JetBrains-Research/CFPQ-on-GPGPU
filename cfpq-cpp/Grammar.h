@@ -1,12 +1,10 @@
-//
-// Created by vkutuev on 14.02.19.
-//
 
 #ifndef CFPQ_CFPQ_H
 #define CFPQ_CFPQ_H
 
 #include <string>
 #include <map>
+#include <unordered_set>
 #include <unordered_map>
 #include <cmath>
 #include <ctime>
@@ -24,11 +22,11 @@ public:
     virtual ~Grammar();
 
     template<class T1 = Matrix, class T2 = MatricesEnv>
-    unsigned int intersection_with_graph(Graph &graph) {
-        T2 *utils = new T2();
+    std::pair<unsigned int, unsigned int> intersection_with_graph(Graph &graph) {
+        T2 *environment = new T2();
         vertices_count = graph.vertices_count;
-        matrices.reserve(nonterminals_count);
 
+        matrices.reserve(nonterminals_count);
         for (unsigned int i = 0; i < nonterminals_count; ++i) {
             matrices.push_back(new T1(vertices_count));
         }
@@ -36,39 +34,38 @@ public:
         for (auto &edge : graph.edges) {
             for (unsigned int nonterm : terminal_to_nonterminals[edge.first]) {
                 matrices[nonterm]->set_bit(edge.second.first, edge.second.second);
-                matrices[nonterm]->changed_prev = true;
             }
         }
 
         clock_t begin_time = clock();
+        environment->environment_preprocessing(matrices);
+        clock_t begin_algo_time = clock();
 
-        utils->environment_preprocessing(matrices);
-
-        while (true) {
-            bool has_changed_global = false;
-            for (auto &rule : rules) {
-                if (matrices[rule.second.first]->changed_prev | matrices[rule.second.second]->changed_prev) {
-                    bool has_changed = matrices[rule.first]->add_mul(matrices[rule.second.first],
-                                                                     matrices[rule.second.second]);
-                    matrices[rule.first]->changed = has_changed;
-                    has_changed_global |= has_changed;
+        bool global_changed;
+        unsigned long rules_size = rules.size();
+        do {
+            global_changed = false;
+            for (uint32_t i = 0; i < rules_size; ++i) {
+                auto c = std::get<0>(rules[i]);
+                auto a = std::get<1>(rules[i]);
+                auto b = std::get<2>(rules[i]);
+                if (environment->changed_matrices[a] || environment->changed_matrices[b]) {
+                    global_changed = true;
+                    environment->add_mull(c, matrices[c], matrices[a], matrices[b]);
                 }
             }
-            if (!has_changed_global) {
-                break;
-            }
-            for (auto &matrix: matrices) {
-                matrix->changed_prev = matrix->changed;
-                matrix->changed = false;
-            }
-        }
+            environment->get_changed_matrices();
+        } while (global_changed);
 
-        utils->environment_postprocessing(matrices);
-
+        clock_t end_algo_time = clock();
+        environment->environment_postprocessing(matrices);
         clock_t end_time = clock();
-        delete utils;
+
+        delete environment;
         double elapsed_secs = static_cast<double>(end_time - begin_time) / CLOCKS_PER_SEC;
-        return static_cast<unsigned int>(round(elapsed_secs * 1000));
+        double overhead_secs =
+                static_cast<double>((begin_algo_time - begin_time) + (end_time - end_algo_time)) / CLOCKS_PER_SEC;
+        return std::make_pair(elapsed_secs, overhead_secs);
     }
 
     void print_results(const std::string &output_filename);
@@ -76,9 +73,10 @@ public:
 private:
     unsigned int nonterminals_count = 0;
     unsigned int vertices_count = 0;
+
     std::map<std::string, unsigned int> nonterminal_to_index;
     std::unordered_map<std::string, std::vector<int>> terminal_to_nonterminals;
-    std::vector<std::pair<int, nonterminals_pair>> rules;
+    std::vector<std::tuple<uint32_t, uint32_t, uint32_t>> rules;
     std::vector<Matrix *> matrices;
 };
 

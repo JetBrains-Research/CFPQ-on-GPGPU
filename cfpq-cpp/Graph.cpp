@@ -1,6 +1,3 @@
-//
-// Created by vkutuev on 18.02.19.
-//
 
 #include <fstream>
 #include "Graph.h"

@@ -1,6 +1,3 @@
-//
-// Created by vkutuev on 18.02.19.
-//
 
 #ifndef CFPQ_GRAPH_H
 #define CFPQ_GRAPH_H

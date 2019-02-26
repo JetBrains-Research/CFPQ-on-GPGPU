@@ -1,6 +1,3 @@
-//
-// Created by vkutuev on 18.02.19.
-//
 
 #include "Grammar.h"
 #include <sstream>
@@ -11,6 +8,7 @@ using std::ifstream;
 using std::ofstream;
 using std::string;
 using std::vector;
+using std::make_tuple;
 
 Grammar::Grammar(const string &grammar_filename) {
 
@@ -39,8 +37,8 @@ Grammar::Grammar(const string &grammar_filename) {
             if (!nonterminal_to_index.count(terms[2])) {
                 nonterminal_to_index[terms[2]] = nonterminals_count++;
             }
-            rules.push_back(
-                    {nonterminal_to_index[terms[0]], {nonterminal_to_index[terms[1]], nonterminal_to_index[terms[2]]}});
+            rules.emplace_back(nonterminal_to_index[terms[0]], nonterminal_to_index[terms[1]],
+                               nonterminal_to_index[terms[2]]);
         }
     }
     chomsky_stream.close();
