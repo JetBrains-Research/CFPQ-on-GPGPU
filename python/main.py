@@ -22,9 +22,9 @@ def main(grammar_file, graph_file, args):
     matrices = get_boolean_adjacency_matrices(grammar, inverse_grammar, graph, graph_size)
     remove_terminals(grammar, inverse_grammar)
 
-    begin_time = time.time()
     if args.type != 'bool':
         to_type(matrices, args.type)
+    begin_time = time.time()
     if not args.on_cpu:
         to_gpu(matrices)
 
@@ -32,9 +32,9 @@ def main(grammar_file, graph_file, args):
 
     if not args.on_cpu:
         from_gpu(matrices)
+    end_time = time.time()
     if args.type != 'bool':
         from_type(matrices, args.type, graph_size)
-    end_time = time.time()
 
     get_solution(matrices, args.output)
     print(int(1000 * iteration_time + 0.5), int(1000 * (end_time - begin_time) + 0.5))
