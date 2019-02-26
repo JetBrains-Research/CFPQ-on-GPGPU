@@ -1,6 +1,8 @@
 import math
 import numpy as np
 
+from scipy import sparse
+
 
 size = 1
 
@@ -24,7 +26,7 @@ def set_bit_uint(matrix, row, col):
 
 def get_boolean_adjacency_matrices(grammar, inv_grammar, graph, graph_size, mat_type='bool'):
     global size
-    if mat_type == 'bool':
+    if mat_type in ['bool', 'sparse']:
         set_bit = set_bit_bool
         matrices = {i: np.zeros((graph_size, graph_size), dtype=np.bool) for i in grammar}
     elif mat_type in ['uint8', 'uint32']:
@@ -39,4 +41,8 @@ def get_boolean_adjacency_matrices(grammar, inv_grammar, graph, graph_size, mat_
             if value in inv_grammar:
                 for nonterminal in inv_grammar[value]:
                     set_bit(matrices[nonterminal], row, col)
+
+    if mat_type == 'sparse':
+        for key in matrices:
+            matrices[key] = sparse.csr_matrix(matrices[key], dtype=bool)
     return matrices

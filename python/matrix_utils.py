@@ -41,5 +41,8 @@ def from_type(matrices, mat_type, nodes_amount):
             for i in range(32):
                 full_matrix[:, i::32] = (matrix >> (31 - i)) & 1
             matrices[key] = full_matrix[:nodes_amount, :nodes_amount]
+    elif mat_type == 'sparse':
+        for key, matrix in matrices.items():
+            matrices[key] = matrix.toarray()
     else:
-        raise ValueError('Casting to type {} is not supported yet'.format(mat_type))
+        raise ValueError('Casting from type {} is not supported yet'.format(mat_type))

@@ -89,12 +89,13 @@ if __name__ == "__main__":
     parser.add_argument('-o', '--output', type=str, help='Path to output file')
     parser.add_argument('-v', '--verbose', action='store_true', help='Print logs into console')
     parser.add_argument('-c', '--on_cpu', action='store_true', help='Naive multiplication on CPU')
-    parser.add_argument('-t', '--type', default='bool', choices=['bool', 'uint8', 'uint32'], help='Type for booleans to be packed in')
+    parser.add_argument('-t', '--type', default='bool', choices=['bool', 'sparse', 'uint8', 'uint32'], help='Type for booleans to be packed in')
     parser.add_argument('-n', '--naive_cfpq', action='store_true', help='Iterate through all products instead of tracking updates matrices')
     args = parser.parse_args()
 
     if args.output is None:
         args.output = sys.stdout
+    assert not args.type == 'sparse' or args.on_cpu, 'Sparse matrices multiplication can be only on CPU. Pass "--on_cpu" / "-c" flag'
     VERBOSE = args.verbose
     update_matrix = update_matrix_cpu if args.on_cpu else update_matrix_gpu
     iterate_on_grammar = iterate_on_grammar_naive if args.naive_cfpq else iterate_on_grammar_tracking

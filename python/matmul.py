@@ -1,6 +1,8 @@
-from numba import cuda
-import numpy as np
 import math
+
+import numpy as np
+from numba import cuda
+from scipy.sparse import csr_matrix
 
 
 threads_size = int(np.sqrt(cuda.get_current_device().MAX_THREADS_PER_BLOCK))
@@ -14,16 +16,12 @@ size = 1
 def update_matrix_cpu(matrices, head, body):
     head_mat = matrices[head]
     body_first_mat, body_second_mat = matrices[body[0]], matrices[body[1]]
-    mat_type = str(head_mat.dtype)
-    if mat_type == 'bool': 
+    mat_type = 'sparse' if isinstance(head_mat, csr_matrix) else str(head_mat.dtype)
+    if mat_type in ['bool', 'sparse']:
         new_matrix = head_mat + body_first_mat.dot(body_second_mat)
         matrices[head] = new_matrix
-        return np.any(new_matrix != head_mat)
-    elif mat_type in ['uint8', 'uint32']:
-        size = 8 if mat_type == 'uint8' else 32
-        new_matrix = head_mat + cpu_matmul_uint(body_first_mat, body_second_mat, size=size)
-        matrices[head] = new_matrix
-        return np.any(new_matrix != head_mat)
+        comparison = new_matrix != head_mat
+        return np.any(comparison) if mat_type == 'bool' else (comparison).nnz != 0
     else:
         raise ValueError('CPU multiplication of matrices type {} is not supported'.format(mat_type))
 
