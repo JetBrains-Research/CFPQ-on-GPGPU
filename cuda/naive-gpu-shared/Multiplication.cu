@@ -50,10 +50,10 @@ __device__ TYPE row_column_product(TYPE *A, TYPE *B, int cols) {
 			}
 		}
 		b_el = B[i * cols + x];
-		#pragma unroll 32
-		for (TYPE b = 0; b < 32; ++b) {
+		#pragma unroll
+		for (TYPE b = 0; b < TYPE_SIZE; ++b) {
 			if (b_el & 1) {
-				acc |= A_shared[(i % (THREADS_PER_BLOCK / TYPE_SIZE)) * TYPE_SIZE + (TYPE_SIZE - 1 - b)];
+				acc |= A_shared[(i % (THREADS_PER_BLOCK / TYPE_SIZE)) * TYPE_SIZE + b];
 			}
 			b_el >>= 1;
 		}
@@ -86,6 +86,8 @@ __global__ void matrix_product(TYPE *A, TYPE *B, TYPE *C, int cols) {
 	int row_start = blockIdx.y * cols;
 
 	TYPE acc = row_column_product(A, B, cols);
+
+	if (acc == 0) return;
 
 	C[row_start + x] = acc;
 }

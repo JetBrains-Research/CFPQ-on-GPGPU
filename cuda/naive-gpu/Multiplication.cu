@@ -33,7 +33,6 @@ inline size_t matrix_memsize(int N) {
 __device__ TYPE row_column_product(TYPE *A, TYPE *B, int cols) {
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 	int rows = cols / TYPE_SIZE + (cols % TYPE_SIZE ? 1 : 0);
-	int row_start = blockIdx.y * cols;
 
 	if (x >= cols) {
 		return 0;
@@ -43,10 +42,10 @@ __device__ TYPE row_column_product(TYPE *A, TYPE *B, int cols) {
 	TYPE b_el;
 	for (TYPE i = 0; i < rows; ++i) {
 		b_el = B[i * cols + x];
-		#pragma unroll 32
-		for (TYPE b = 0; b < 32; ++b) {
+		#pragma unroll
+		for (TYPE b = 0; b < TYPE_SIZE; ++b) {
 			if (b_el & 1) {
-				acc |= A[row_start + i * TYPE_SIZE + (TYPE_SIZE - 1 - b)];
+				acc |= A[blockIdx.y * cols + i * TYPE_SIZE + b];
 			}
 			b_el >>= 1;
 		}
@@ -79,6 +78,8 @@ __global__ void matrix_product(TYPE *A, TYPE *B, TYPE *C, int cols) {
 	int row_start = blockIdx.y * cols;
 
 	TYPE acc = row_column_product(A, B, cols);
+
+	if (acc == 0) return;
 
 	C[row_start + x] = acc;
 }
