@@ -5,10 +5,11 @@ from collections import defaultdict
 
 import numpy as np
 
-from math_utils import get_boolean_adjacency_matrices, remove_terminals, time_measure
-from parsing_utils import parse_graph, parse_grammar, products_set, products_list
+from math_utils import get_boolean_adjacency_matrices, remove_terminals
+from parsing import parse_graph, parse_grammar, products_set, products_list
 from matmul import update_matrix_cpu, update_matrix_gpu
 from matrix_utils import to_gpu, from_gpu, to_type, from_type
+from utils import time_measure
 
 
 VERBOSE = False
@@ -21,28 +22,22 @@ def main(grammar_file, graph_file, args):
     matrices = get_boolean_adjacency_matrices(grammar, inverse_grammar, graph, graph_size)
     remove_terminals(grammar, inverse_grammar)
 
-    algo_time, overhead_time = 0, 0
-
-    # supposing that matrices being altered in-place
+    begin_time = time.time()
     if args.type != 'bool':
-        _, to_type_time = to_type(matrices, args.type)
-        algo_time += to_type_time
+        to_type(matrices, args.type)
     if not args.on_cpu:
-        _, to_gpu_time = to_gpu(matrices)
-        overhead_time += to_gpu_time
+        to_gpu(matrices)
 
     _, iteration_time = iterate_on_grammar(grammar, inverse_grammar, matrices)
-    algo_time += iteration_time
 
     if not args.on_cpu:
-        _, from_gpu_time = from_gpu(matrices)
-        algo_time += from_gpu_time
+        from_gpu(matrices)
     if args.type != 'bool':
-        _, from_type_time = from_type(matrices, args.type, graph_size)
-        overhead_time += from_type_time
+        from_type(matrices, args.type, graph_size)
+    end_time = time.time()
 
     get_solution(matrices, args.output)
-    print(int(1000 * algo_time + 0.5), int(1000 * overhead_time + 0.5))
+    print(int(1000 * iteration_time + 0.5), int(1000 * (end_time - begin_time) + 0.5))
 
 
 def get_solution(matrices, file=sys.stdout):

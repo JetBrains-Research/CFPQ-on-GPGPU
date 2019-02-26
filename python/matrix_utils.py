@@ -1,10 +1,7 @@
 from numba import cuda
 import numpy as np
 
-from math_utils import time_measure
 
-
-@time_measure
 def to_gpu(matrices):
     stream = cuda.stream()
     for nonterminal, matrix in matrices.items():
@@ -12,7 +9,6 @@ def to_gpu(matrices):
     stream.synchronize()
 
 
-@time_measure
 def from_gpu(matrices):
     stream = cuda.stream()
     for nonterminal, matrix in matrices.items():
@@ -20,7 +16,6 @@ def from_gpu(matrices):
     stream.synchronize()
 
 
-@time_measure
 def to_type(matrices, mat_type):
     if mat_type in [np.uint8, 'uint8']:
         for key, matrix in matrices.items():
@@ -35,7 +30,6 @@ def to_type(matrices, mat_type):
         raise ValueError('Casting to type {} is not supported yet'.format(mat_type))
 
 
-@time_measure
 def from_type(matrices, mat_type, nodes_amount):
     if mat_type in [np.uint8, 'uint8']:
         for key, matrix in matrices.items():

@@ -3,9 +3,12 @@ import numpy as np
 import math
 
 
-threadsperblock = (32, 32)
+threads_size = int(np.sqrt(cuda.get_current_device().MAX_THREADS_PER_BLOCK))
+threadsperblock = (threads_size, threads_size)
+blockspergrid = None
 tpb_x = threadsperblock[0]
 tpb_y = threadsperblock[1]
+size = 1
 
 
 def update_matrix_cpu(matrices, head, body):
