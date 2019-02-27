@@ -54,10 +54,8 @@ def iterate_on_grammar_tracking(grammar, inverse_grammar, matrices):
     inverse_by_nonterm = defaultdict(set)
     for body, heads in inverse_grammar.items():
         for head in heads:
-            if body[0] != head:
-                inverse_by_nonterm[body[0]].add((head, body))
-            if body[1] != head:
-                inverse_by_nonterm[body[1]].add((head, body))
+            inverse_by_nonterm[body[0]].add((head, body))
+            inverse_by_nonterm[body[1]].add((head, body))
 
     to_recalculate = products_set(grammar)
     while to_recalculate:
@@ -65,9 +63,7 @@ def iterate_on_grammar_tracking(grammar, inverse_grammar, matrices):
         is_changed = update_matrix(matrices, head, body)
         if not is_changed:
             continue
-        for product in inverse_by_nonterm[head]:
-            if product != (head, body):
-                to_recalculate.add(product)
+        to_recalculate |= inverse_by_nonterm[head]
 
 
 @time_measure
