@@ -1,4 +1,10 @@
+import math
 import numpy as np
+
+from scipy.sparse import csr_matrix
+
+
+size = 1
 
 
 def remove_terminals(grammar, inverse_grammar):
@@ -10,12 +16,42 @@ def remove_terminals(grammar, inverse_grammar):
     return len(terminals)
 
 
-def get_boolean_adjacency_matrices(grammar, inv_grammar, graph, graph_size):
-    size = graph_size
-    matrices = {i: np.zeros((size, size), dtype=np.bool) for i in grammar}
+def set_bit_bool(matrix, row, col):
+    matrix[row, col] = True
+
+
+def set_bit_uint(matrix, row, col):
+    matrix[row, col // size] |= 1 << (size - (col % size) - 1)
+
+
+def set_bit_sparse(pairs, row, col):
+    pairs[0].append(row)
+    pairs[1].append(col)
+
+
+def get_boolean_adjacency_matrices(grammar, inv_grammar, graph, graph_size, mat_type='bool'):
+    global size
+    if mat_type  == 'bool':
+        set_bit = set_bit_bool
+        matrices = {i: np.zeros((graph_size, graph_size), dtype=bool) for i in grammar}
+    elif mat_type == 'sparse':
+        set_bit = set_bit_sparse
+        matrices = {i: ([], []) for i in grammar}
+    elif mat_type in ['uint8', 'uint32']:
+        size = 8 if mat_type == 'uint8' else 32
+        set_bit = set_bit_uint
+        matrices = {i: np.zeros((graph_size, math.ceil(graph_size / size)), dtype=mat_type) for i in grammar}
+    else:
+        raise ValueError('Unsupported type {}'.format(mat_type))
+
     for row, verts in graph.items():
         for col, value in verts.items():
             if value in inv_grammar:
                 for nonterminal in inv_grammar[value]:
-                    matrices[nonterminal][row, col] = True
+                    set_bit(matrices[nonterminal], row, col)
+
+    if mat_type == 'sparse':
+        for key in matrices:
+            matrices[key] = csr_matrix(([True] * len(matrices[key][0]), matrices[key]),
+                                        shape=(graph_size, graph_size), dtype=bool)
     return matrices
