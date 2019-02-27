@@ -1,8 +1,11 @@
 import math
 
 import numpy as np
+import time
 from numba import cuda
 from scipy.sparse import csr_matrix
+
+from utils import time_measure
 
 
 threads_size = int(np.sqrt(cuda.get_current_device().MAX_THREADS_PER_BLOCK))
@@ -11,6 +14,7 @@ blockspergrid = None
 tpb_x = threadsperblock[0]
 tpb_y = threadsperblock[1]
 size = 1
+matmul_method = None
 
 
 def update_matrix_cpu(matrices, head, body):
@@ -26,18 +30,13 @@ def update_matrix_cpu(matrices, head, body):
         raise ValueError('CPU multiplication of matrices type {} is not supported'.format(mat_type))
 
 
-def update_matrix_gpu(matrices, head, body):
-    head_mat, body_first_mat = matrices[head], matrices[body[0]]
-    body_second_mat = matrices[body[1]]
+@time_measure
+def initialize_and_compile(mat_size, mat_type):
+    mat = cuda.to_device(np.zeros((mat_size, mat_size), dtype=mat_type))
+    blockspergrid = tuple(int(math.ceil(mat_size / threadsperblock[i])) for i in (0, 1))
     is_changed = cuda.device_array((1,), dtype=bool)
 
-    blockspergrid_x = int(math.ceil(body_first_mat.shape[0] / threadsperblock[0]))
-    blockspergrid_y = int(math.ceil(body_second_mat.shape[1] / threadsperblock[1]))
-    blockspergrid = (blockspergrid_x, blockspergrid_y)
-
-    global size
-    mat_type = str(head_mat.dtype)
-
+    global size, matmul_method
     if mat_type == 'bool':
         matmul_method = matmul_bool[blockspergrid, threadsperblock]
     elif mat_type == 'uint8':
@@ -48,6 +47,14 @@ def update_matrix_gpu(matrices, head, body):
         size = 32
     else:
         raise ValueError('GPU multiplication of matrices type {} is not supported'.format(mat_type))
+
+    matmul_method(mat, mat, mat, is_changed)
+
+
+def update_matrix_gpu(matrices, head, body):
+    head_mat, body_first_mat = matrices[head], matrices[body[0]]
+    body_second_mat = matrices[body[1]]
+    is_changed = cuda.device_array((1,), dtype=bool)
 
     matmul_method(body_first_mat, body_second_mat, head_mat, is_changed)
 

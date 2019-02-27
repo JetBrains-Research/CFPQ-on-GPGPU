@@ -6,7 +6,7 @@ import numpy as np
 
 from math_utils import get_boolean_adjacency_matrices, remove_terminals
 from parsing import parse_graph, parse_grammar, products_set, products_list
-from matmul import update_matrix_cpu, update_matrix_gpu
+from matmul import update_matrix_cpu, update_matrix_gpu, initialize_and_compile
 from matrix_utils import to_gpu, from_gpu, to_type, from_type
 from utils import time_measure
 
@@ -20,6 +20,9 @@ def main(grammar_file, graph_file, args):
 
     matrices = get_boolean_adjacency_matrices(grammar, inverse_grammar, graph, graph_size, mat_type=args.type)
     remove_terminals(grammar, inverse_grammar)
+
+    if not args.on_cpu:
+        _, jit_time = initialize_and_compile(graph_size, args.type)
 
     begin_time = time.time()
     if not args.on_cpu:
