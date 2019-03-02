@@ -8,14 +8,14 @@
     * Four Russians method for matrix multiplication with packed into uint32 boolean values
 ## TODO list:
    - Implementation:
-      - [ ] CFPQ on C++ ([#4](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/4))
-      - [ ] CFPQ on Python ([#9](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/9))
+         - [x] CFPQ on C++ ([#4](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/4))
+      - [x] CFPQ on Python ([#9](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/9))
       - [ ] testing and benchmarking system ([#7](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/7))
-      - [ ] naive matrix multiplication on GPU ([#5](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/5))
-      - [ ] Four Russians method for matrix multiplication on GPU ([#1](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/1))
+      - [x] naive matrix multiplication on GPU ([#5](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/5))
+      - [x] Four Russians method for matrix multiplication on GPU ([#1](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/1))
       - [ ] matrix multiplication using m4ri lib ()
-      - [ ] sparse boolean matrix multiplication using scipy lib on Python ()
-      - [ ] naive matrix multiplication on GPU using numba ([#11](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/11))
+      - [x] sparse boolean matrix multiplication using scipy lib on Python ()
+      - [x] naive matrix multiplication on GPU using numba ([#11](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/11))
    - Evaluation:
       - [ ] graphs
       - [ ] linear input (optopnal)
