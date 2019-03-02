@@ -1,4 +1,18 @@
 .idea/
 .vscode/
+CMakeFiles/
+
+cmake_install.cmake
+CMakeCache.txt
+Makefile
+
+m4riGPU
+naiveGPU
+naiveGPU-shared
+
+tests.csv
+result.csv
+log.txt
+answer.txt
 
 *.pyc
