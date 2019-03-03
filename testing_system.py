@@ -9,6 +9,7 @@ from test_utils.runners import CRunner, PythonRunner
 from test_utils.run_strategy import RunStrategy
 
 SOLUTIONS_FOLDER = 'solutions'
+REQUIREMENTS_PATH = 'python/requirements.txt'
 LOG_FILE = open('log.txt', 'wt', 1)
 
 def testing_system(tests):
@@ -27,13 +28,25 @@ def testing_system(tests):
     exec = [file for file in listdir(SOLUTIONS_FOLDER) if 'make' not in file.lower()]
     print(f'Builded C++ solutions: {", ".join(exec)}')
 
+    print('Install python requirements...')
+    comp_proc = shell_run(
+        ['test_utils/install_requirements.sh', REQUIREMENTS_PATH],
+        stdout=LOG_FILE, stderr=LOG_FILE
+    )
+    if comp_proc.returncode != 0:
+        exit(0)
+
     runners = [CRunner(join(SOLUTIONS_FOLDER, ex)) for ex in exec]
+    runners += [
+        PythonRunner('python/main.py', **{'name': 'python_GPU_uint32', 'args': ['-t=uint32']}),
+        PythonRunner('python/main.py', **{'name': 'python_GPU_uint8', 'args': ['-t=uint8']}),
+        PythonRunner('python/main.py', **{'name': 'python_CPU_sparse', 'args': ['-t=sparse', '--on_cpu']})
+    ]
     
     print('Run checking test...')
     for runner in tqdm(runners):
         runner.run(*tests['A_star1:fullgraph_10'], 'answer.txt')
 
-    # test_names = ['A_star1:fullgraph_10', 'A_star1:fullgraph_50', 'A_star1:fullgraph_100', 'A_star1:fullgraph_200'] 
     test_names = tests.keys()
     run_strategy = RunStrategy(runners, test_names)
     results = {
@@ -41,15 +54,28 @@ def testing_system(tests):
             runner.name: [] for runner in runners
         } for test in test_names
     }
+
     print(f'Run {len(tests.keys())} tests...')
     print(f'Using strategy: {run_strategy.description}')
+    info = {}
     for runner, test_name in tqdm(run_strategy.strategy):
-        LOG_FILE.write(f'Run {runner.name} solution on {test_name} test\n')
+        if info.get((runner, test_name), '') == 'failed':
+            LOG_FILE.write(f'{runner.name} skip test {test_name} because of previos failure\n')
+            continue
+        if test_name in results and runner.name in results[test_name]:
+            if len(results[test_name][runner.name]) >= run_strategy.STOP_REPEAT and\
+                np.mean(results[test_name][runner.name]) > run_strategy.THRESHOLD:
+                LOG_FILE.write(f'{runner.name} skip test {test_name} because it\' too long...\n')
+                continue
+
+        LOG_FILE.write(f'{runner.name} work on {test_name} test\n')
         try:
             time = runner.run(*tests[test_name], 'answer.txt')
             results[test_name][runner.name].append(time)
         except Exception as e:
             LOG_FILE.write(f'failed because of {e}\n')
+            info[(runner, test_name)] = 'failed'
+
     print('Collect statistic and saving to result.csv...')
     with open('result.csv', 'w') as f:
         header = 'Test name'
