@@ -1,8 +1,4 @@
 
-#define CFPQ_HASH_BASE0 11
-#define CFPQ_HASH_BASE1 13
-#define CFPQ_MOD 1000000007
-
 #include "Grammar.h"
 #include <sstream>
 #include <fstream>
@@ -12,6 +8,11 @@ using std::ifstream;
 using std::ofstream;
 using std::string;
 using std::vector;
+
+const unsigned int hash_base0 = 11;
+const unsigned int hash_base1 = 13;
+const unsigned long long hash_mod = 1000000007;
+
 
 Grammar::Grammar(const string &grammar_filename) {
 
@@ -60,12 +61,14 @@ void Grammar::print_results(const string &output_filename) {
         for (unsigned int row = 0; row < vertices_count; ++row) {
             unsigned long long line_hash = 0;
             for (unsigned int col = 0; col < vertices_count; ++col) {
+                line_hash *= hash_base0;
                 if (matrices[nonterm.second]->get_bit(row, col) != 0) {
                     ++count;
-                    line_hash = (line_hash * CFPQ_HASH_BASE0 + 1) % CFPQ_MOD;
+                    ++line_hash;
                 }
+                line_hash %= hash_mod;
             }
-            hash = (hash * CFPQ_HASH_BASE1 + line_hash) % CFPQ_MOD;
+            hash = (hash * hash_base1 + line_hash) % hash_mod;
         }
         out_stream << nonterm.first << ' ' << hash << ' ' << count << std::endl;
     }
