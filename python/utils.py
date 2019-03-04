@@ -21,4 +21,4 @@ def mat_hash(mat):
 
     vec_base0 = np.frompyfunc(lambda a, b: (a * HASH_BASE_0 + b) % HASH_MOD, 2, 1)
     vec_base1 = np.frompyfunc(lambda a, b: (a * HASH_BASE_1 + b) % HASH_MOD, 2, 1)
-    return vec_base1.reduce(vec_base0.reduce(mat, axis=0))
+    return vec_base1.reduce(vec_base0.reduce(mat, axis=1))

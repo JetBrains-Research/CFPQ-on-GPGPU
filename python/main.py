@@ -49,7 +49,7 @@ def get_solution(matrices, graph_size, args):
         assert file is sys.stdout, f'Only allowed to print solution in file or stdout, not in {file}'
     
     for nonterminal, matrix in matrices.items():
-        nonzeros = np.sum(matrix != 0)
+        nonzeros = np.sum(matrix)
         hashsum = mat_hash(matrix)
         print('{} {} {}'.format(nonterminal, hashsum, nonzeros), file=file)
 
