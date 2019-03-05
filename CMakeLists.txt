@@ -43,10 +43,9 @@ add_executable(m4riGPU
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
         )
 
-add_executable(m4riCPU 
-        m4ri/main.cpp 
-        m4ri/m4ri_matrix.h 
-        m4ri/m4ri_matrix.cpp 
+add_executable(m4riCPU
+        m4ri/main.cpp
+        m4ri/m4ri_matrix.h
+        m4ri/m4ri_matrix.cpp
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
         )
-        
