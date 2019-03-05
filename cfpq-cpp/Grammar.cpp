@@ -1,6 +1,3 @@
-//
-// Created by vkutuev on 18.02.19.
-//
 
 #include "Grammar.h"
 #include <sstream>
@@ -11,6 +8,11 @@ using std::ifstream;
 using std::ofstream;
 using std::string;
 using std::vector;
+
+const unsigned int hash_base0 = 11;
+const unsigned int hash_base1 = 13;
+const unsigned long long hash_mod = 1000000007;
+
 
 Grammar::Grammar(const string &grammar_filename) {
 
@@ -47,21 +49,28 @@ Grammar::Grammar(const string &grammar_filename) {
 }
 
 Grammar::~Grammar() {
-    for (auto &matrix: matrices)
-        delete matrix;
+    for (unsigned int i = 0; i < nonterminals_count; ++i)
+        delete matrices[i];
 }
 
 void Grammar::print_results(const string &output_filename) {
     auto out_stream = ofstream(output_filename, ofstream::out);
     for (auto &nonterm : nonterminal_to_index) {
-        out_stream << nonterm.first;
+        unsigned long long hash = 0;
+        unsigned long count = 0;
         for (unsigned int row = 0; row < vertices_count; ++row) {
+            unsigned long long line_hash = 0;
             for (unsigned int col = 0; col < vertices_count; ++col) {
-                if (matrices[nonterm.second]->get_bit(row, col) != 0)
-                    out_stream << " " << row << " " << col;
+                line_hash *= hash_base0;
+                if (matrices[nonterm.second]->get_bit(row, col) != 0) {
+                    ++count;
+                    ++line_hash;
+                }
+                line_hash %= hash_mod;
             }
+            hash = (hash * hash_base1 + line_hash) % hash_mod;
         }
-        out_stream << std::endl;
+        out_stream << nonterm.first << ' ' << hash << ' ' << count << std::endl;
     }
     out_stream.close();
 }

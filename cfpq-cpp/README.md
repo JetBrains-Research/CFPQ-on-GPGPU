@@ -21,7 +21,8 @@ grammar.intersection_with_graph<MyMatrixClass, MyEnvClass>(graph);
 int main(int argc, char *argv[]) {
     Grammar grammar = Grammar(argv[1]);
     Graph graph = Graph(argv[2]);
-    std::cout << grammar.intersection_with_graph<MyMatrixClass, MyEnvClass>(graph);
+    std::pair<unsigned int, unsigned int> times = grammar.intersection_with_graph<M4riMatrix>(graph);
+    std::cout << times.first << ' ' << times.second << std::endl;
     grammar.print_results(argv[3]);
     return 0;
 }

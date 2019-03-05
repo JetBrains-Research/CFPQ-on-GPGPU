@@ -1,6 +1,3 @@
-//
-// Created by vkutuev on 18.02.19.
-//
 
 #ifndef CFPQ_MATRIX_H
 #define CFPQ_MATRIX_H
@@ -12,9 +9,6 @@ public:
     explicit Matrix(unsigned int n) {};
 
     virtual ~Matrix() = default;
-
-    bool changed = false;
-    bool changed_prev = true;
 
     virtual void set_bit(unsigned int row, unsigned col) = 0;
 
