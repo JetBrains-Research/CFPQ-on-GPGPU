@@ -34,11 +34,15 @@ void MethodOf4RusMatricesEnv::environment_postprocessing
         auto *A = dynamic_cast<MethodOf4RusMatrix *>(m);
         gpu_m4ri::copy_device_to_host_async(A->matrix_device, A->matrix_host, 
                   A->size_multiple_by_32 * A->cols);
+        
+    }
+    gpu_m4ri::synchronize_with_gpu();
+    for (auto &m : matrices) {
+        auto *A = dynamic_cast<MethodOf4RusMatrix *>(m);
         gpu_m4ri::delete_matrix_device(A->matrix_device);
     }
     tables.free();
     gpu_m4ri::delete_matrix_device(extra_matrix_device);
-    gpu_m4ri::synchronize_with_gpu();
 }
 
 void MethodOf4RusMatrix::set_bit(unsigned int row, unsigned col) {
