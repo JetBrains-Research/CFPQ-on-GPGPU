@@ -59,9 +59,10 @@ def testing_system(tests):
                     cur_res[nonterm] = (hash, count)
             if compare is None:
                 compare = cur_res
-            elif not compare == cur_res:
-                print(f'{runner.name} and {runners[0].name} have differents answer on test {check_test}')
-                exit(0)
+            else:
+                if not compare == cur_res:
+                    print(f'{runner.name} and {runners[0].name} have different answers on test {check_test}')
+                    exit(0)
 
     test_names = tests.keys()
     run_strategy = RunStrategy(runners, test_names)
