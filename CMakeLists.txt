@@ -42,3 +42,12 @@ add_executable(m4riGPU
         cuda/methodOf4RusBooleanSemiringGpu/cfpqM4RusGpu.cpp
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
         )
+
+link_directories(/usr/local/include)
+add_executable(m4riCPU
+        m4ri/main.cpp
+        m4ri/m4ri_matrix.h
+        m4ri/m4ri_matrix.cpp
+        cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
+        )
+target_link_libraries(m4riCPU m4ri)
