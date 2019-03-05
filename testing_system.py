@@ -18,7 +18,7 @@ def testing_system(tests):
     commands = [
         ['rm', '-rf', SOLUTIONS_FOLDER],
         ['mkdir', SOLUTIONS_FOLDER],
-        ['cmake', '-B', SOLUTIONS_FOLDER, '-DCMAKE_CONFIGURATION_TYPES=Release'],
+        ['cmake', f'-B{SOLUTIONS_FOLDER}', '-H.', '-DCMAKE_CONFIGURATION_TYPES=Release'],
         ['make', '-C', SOLUTIONS_FOLDER],
     ]
     for command in commands:
@@ -42,10 +42,26 @@ def testing_system(tests):
         PythonRunner('python/main.py', **{'name': 'python_GPU_uint8', 'args': ['-t=uint8']}),
         PythonRunner('python/main.py', **{'name': 'python_CPU_sparse', 'args': ['-t=sparse', '--on_cpu']})
     ]
-    
-    print('Run checking test...')
-    for runner in tqdm(runners):
-        runner.run(*tests['A_star1:fullgraph_10'], 'answer.txt')
+    print(f'All runners: {", ".join(map(lambda r: r.name, runners))}')
+
+
+    checking_test = ['A_star1:fullgraph_10', 'A_star1:fullgraph_50',
+                     'A_star2:fullgraph_10', 'A_star2:fullgraph_50']
+    print(f'Cross validation on tests {", ".join(checking_test)}')
+    for check_test in tqdm(checking_test):
+        compare = None
+        for runner in runners:
+            runner.run(*tests[check_test], f'answer.txt')
+            cur_res = {}
+            with open('answer.txt', 'r') as f:
+                for line in f:
+                    nonterm, hash, count = line.split(' ')
+                    cur_res[nonterm] = (hash, count)
+            if compare is None:
+                compare = cur_res
+            elif not compare == cur_res:
+                print(f'{runner.name} and {runners[0].name} have differents answer on test {check_test}')
+                exit(0)
 
     test_names = tests.keys()
     run_strategy = RunStrategy(runners, test_names)
@@ -72,6 +88,7 @@ def testing_system(tests):
         try:
             time = runner.run(*tests[test_name], 'answer.txt')
             results[test_name][runner.name].append(time)
+            LOG_FILE.write(f'done in {time} seconds\n')
         except Exception as e:
             LOG_FILE.write(f'failed because of {e}\n')
             info[(runner, test_name)] = 'failed'

@@ -2,7 +2,7 @@ import subprocess
 
 class Runner:
 
-    TIMEOUT = 60
+    TIMEOUT = 600
 
     def __init__(self, path, **kwargs):
         self.path = path
@@ -12,10 +12,11 @@ class Runner:
     def run(self, grammar_file, matrix_file, output_file):
         return 0
 
+
 class CRunner(Runner):
     def __init__(self, path, **kwargs):
         super().__init__(path, **kwargs)
-        self.name = 'cuda_' + self.name
+        self.name = 'c++_' + self.name
 
     def run(self, grammar_file, matrix_file, output_file):
         try:
@@ -25,7 +26,8 @@ class CRunner(Runner):
             raise Exception('timeout')
         if compl_proc.stderr != b'':
             raise Exception(compl_proc.stderr)
-        return int(compl_proc.stdout)
+        return int(compl_proc.stdout.decode().split(' ')[0]) / 1000
+
 
 class PythonRunner(Runner):
     def __init__(self, path, **kwargs):
@@ -41,4 +43,4 @@ class PythonRunner(Runner):
             raise Exception('timeout')
         if compl_proc.stderr != b'':
             raise Exception(compl_proc.stderr)
-        return int(compl_proc.stdout.decode().split(' ')[0])
+        return int(compl_proc.stdout.decode().split(' ')[0]) / 1000

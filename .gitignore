@@ -9,6 +9,7 @@ Makefile
 m4riGPU
 naiveGPU
 naiveGPU-shared
+m4riCPU
 
 tests.csv
 result.csv

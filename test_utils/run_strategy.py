@@ -1,8 +1,8 @@
 class RunStrategy:
 
-    N_REPEAT = 30
-    THRESHOLD = 30
-    STOP_REPEAT = 3
+    N_REPEAT = 20
+    THRESHOLD = 60
+    STOP_REPEAT = 5
 
     def __init__(self, runners, tests, method='simple'):
         self.runners = runners
