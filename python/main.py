@@ -8,7 +8,7 @@ from math_utils import get_boolean_adjacency_matrices, remove_terminals
 from parsing import parse_graph, parse_grammar, products_set, products_list
 from matmul import update_matrix_cpu, update_matrix_gpu, initialize_and_compile
 from matrix_utils import to_gpu, from_gpu, to_type, from_type
-from utils import time_measure
+from utils import time_measure, mat_hash
 
 
 VERBOSE = False
@@ -33,23 +33,25 @@ def main(grammar_file, graph_file, args):
     if not args.on_cpu:
         from_gpu(matrices)
     end_time = time.time()
-    if args.type != 'bool':
-        from_type(matrices, args.type, graph_size)
 
-    get_solution(matrices, args.output)
+    get_solution(matrices, graph_size, args)
     print(int(1000 * iteration_time + 0.5), int(1000 * (end_time - begin_time) + 0.5))
 
 
-def get_solution(matrices, file=sys.stdout):
+def get_solution(matrices, graph_size, args):
+    if args.type != 'bool':
+        from_type(matrices, args.type, graph_size)
+
+    file = args.output
     if isinstance(file, str):
         file = open(file, 'wt')
     else:
         assert file is sys.stdout, f'Only allowed to print solution in file or stdout, not in {file}'
     
     for nonterminal, matrix in matrices.items():
-        pairs = np.argwhere(matrix).T
-        print(nonterminal, end=' ', file=file)
-        print(' '.join(map(lambda pair: ' '.join(pair), pairs.astype('str').tolist())), file=file)
+        nonzeros = np.sum(matrix)
+        hashsum = mat_hash(matrix)
+        print('{} {} {}'.format(nonterminal, hashsum, nonzeros), file=file)
 
 
 @time_measure
