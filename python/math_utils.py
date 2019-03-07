@@ -43,13 +43,11 @@ def get_boolean_adjacency_matrices(grammar, inv_grammar, graph, graph_size, mat_
         matrices = {i: np.zeros((graph_size, math.ceil(graph_size / size)), dtype=mat_type) for i in grammar}
     else:
         raise ValueError('Unsupported type {}'.format(mat_type))
-
-    for row, verts in graph.items():
-        for col, value in verts.items():
+    for (row, col), vals in graph.items():
+        for value in vals:
             if value in inv_grammar:
                 for nonterminal in inv_grammar[value]:
                     set_bit(matrices[nonterminal], row, col)
-
     if mat_type == 'sparse':
         for key in matrices:
             matrices[key] = csr_matrix(([True] * len(matrices[key][0]), matrices[key]),
