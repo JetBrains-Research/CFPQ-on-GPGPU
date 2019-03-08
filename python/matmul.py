@@ -32,7 +32,10 @@ def update_matrix_cpu(matrices, head, body):
 
 @time_measure
 def initialize_and_compile(mat_size, mat_type):
-    mat = cuda.to_device(np.zeros((mat_size, mat_size), dtype=mat_type))
+    shape = np.array([mat_size, mat_size])
+    if mat_type.startswith('uint'):
+        shape[1] = math.ceil(mat_size / float(mat_type[4:]))
+    mat = cuda.to_device(np.zeros(tuple(shape), dtype=mat_type))
     blockspergrid = tuple(int(math.ceil(mat_size / threadsperblock[i])) for i in (0, 1))
     is_changed = cuda.device_array((1,), dtype=bool)
 
