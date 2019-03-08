@@ -8,7 +8,7 @@
     * Four Russians method for matrix multiplication with packed into uint32 boolean values
 ## TODO list:
    - Implementation:
-         - [x] CFPQ on C++ ([#4](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/4))
+      - [x] CFPQ on C++ ([#4](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/4))
       - [x] CFPQ on Python ([#9](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/9))
       - [x] testing and benchmarking system ([#7](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/7))
       - [x] naive matrix multiplication on GPU ([#5](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/5))
