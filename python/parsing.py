@@ -20,7 +20,7 @@ def parse_grammar(_file):
 
 
 def parse_graph(_file):
-    result_graph = defaultdict(dict)
+    result_graph = defaultdict(set)
     max_node = 0
     with open(_file, 'rt') as graph:
         for line in graph:
@@ -28,7 +28,7 @@ def parse_graph(_file):
             assert len(terms) == 3, terms
             from_vert, to_vert = int(terms[0]), int(terms[2].rstrip(','))
             max_node = max(max_node, from_vert, to_vert)
-            result_graph[from_vert][to_vert] = terms[1]
+            result_graph[from_vert, to_vert].add(terms[1])
     return result_graph, max_node + 1
 
 
