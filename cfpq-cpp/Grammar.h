@@ -6,8 +6,7 @@
 #include <map>
 #include <unordered_map>
 #include <unordered_set>
-#include <cmath>
-#include <ctime>
+#include <chrono>
 #include <vector>
 #include "Matrix.h"
 #include "Graph.h"
@@ -22,7 +21,7 @@ public:
     virtual ~Grammar();
 
     template<class T1 = Matrix, class T2 = MatricesEnv>
-    std::pair<unsigned int, unsigned int>intersection_with_graph(Graph &graph) {
+    std::pair<unsigned int, unsigned int> intersection_with_graph(Graph &graph) {
         T2 *environment = new T2();
         vertices_count = graph.vertices_count;
         matrices.reserve(nonterminals_count);
@@ -45,9 +44,10 @@ public:
             }
         }
 
-        clock_t begin_time = clock();
+        using namespace std::chrono;
+        high_resolution_clock::time_point begin_time = high_resolution_clock::now();
         environment->environment_preprocessing(matrices);
-        clock_t algorithm_begin_time = clock();
+        high_resolution_clock::time_point algorithm_begin_time = high_resolution_clock::now();
 
         while (!to_recalculate.empty()) {
             unsigned int rule_index = *to_recalculate.begin();
@@ -62,15 +62,16 @@ public:
             }
         }
 
-        clock_t algorithm_end_time = clock();
+        high_resolution_clock::time_point algorithm_end_time = high_resolution_clock::now();
         environment->environment_postprocessing(matrices);
-        clock_t end_time = clock();
+        high_resolution_clock::time_point end_time = high_resolution_clock::now();
 
         delete environment;
 
-        double algorithm_elapsed_secs = static_cast<double>(algorithm_end_time - algorithm_begin_time) / CLOCKS_PER_SEC;
-        double elapsed_secs = static_cast<double>(end_time - begin_time) / CLOCKS_PER_SEC;
-        return std::make_pair(static_cast<unsigned int>(round(elapsed_secs * 1000)), static_cast<unsigned int>(round(algorithm_elapsed_secs * 1000)));
+        milliseconds algorithm_elapsed_secs = duration_cast<milliseconds>(algorithm_end_time - algorithm_begin_time);
+        milliseconds elapsed_secs = duration_cast<milliseconds>(end_time - begin_time);
+        return std::make_pair(static_cast<unsigned int>(elapsed_secs.count()),
+                              static_cast<unsigned int>(algorithm_elapsed_secs.count()));
     }
 
     void print_results(const std::string &output_filename);
