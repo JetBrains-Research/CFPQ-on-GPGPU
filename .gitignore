@@ -13,7 +13,9 @@ m4riCPU
 
 tests.csv
 result.csv
+build_log.txt
 log.txt
 answer.txt
+cross_val/
 
 *.pyc

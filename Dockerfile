@@ -22,7 +22,14 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
     ./miniconda.sh -b -p /usr/local/miniconda && \
     rm miniconda.sh
 ENV PATH /usr/local/miniconda/bin:$PATH
-RUN conda install numpy tqdm
+RUN conda install numpy tqdm cudatoolkit numba scipy six
+
+# install mono
+RUN apt install gnupg ca-certificates && \
+    apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF && \
+    echo "deb https://download.mono-project.com/repo/ubuntu stable-bionic main" | tee /etc/apt/sources.list.d/mono-official-stable.list && \
+    apt update
+RUN apt install -y mono-devel
 
 RUN mkdir work
 WORKDIR /work

@@ -26,9 +26,13 @@ html_page="""
 @app.route("/")
 def get_results():
     data = pd.read_csv('result.csv')
+    time_cols = [col for col in data.columns if 'all_mean' in col]
     with open('log.txt', 'r') as f:
         log = ''.join(f.readlines())
-    return html_page.format(data.to_html(classes='table table-responsive', index=False), log)
+    return html_page.format(
+        data[['Test name'] + time_cols].to_html(classes=['table-bordered', 'table-striped', 'table-hover', 'table-responsive'], index=False),
+        log
+    )
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=7777)

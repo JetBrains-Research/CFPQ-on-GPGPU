@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doc>
+<assembly><name>Brahma.FSharp.OpenCL.Extensions</name></assembly>
+<members>
+<member name="M:Brahma.FSharp.OpenCL.Extensions.[]`1.ToHost``1(``0[],Brahma.OpenCL.ComputeProvider,``0[],System.Int32)">
+<summary>
+  Read data from corresponded buffer into array hostArray. Transferred data length is length.
+</summary>
+</member>
+<member name="M:Brahma.FSharp.OpenCL.Extensions.[]`1.ToHost``1(``0[],Brahma.OpenCL.ComputeProvider,``0[])">
+<summary>
+  Read data from corresponded buffer into array hostArray. Transferred data length is min of a.Length and hostArray.Lenght.
+</summary>
+</member>
+<member name="M:Brahma.FSharp.OpenCL.Extensions.[]`1.ToHost``1(``0[],Brahma.OpenCL.ComputeProvider)">
+<summary>
+ Read all data from corresponded buffer into array a.
+</summary>
+</member>
+<member name="M:Brahma.FSharp.OpenCL.Extensions.[]`1.ToGpu``1(``0[],Brahma.OpenCL.ComputeProvider,``0[])">
+<summary>
+ Write data from array data into corresponded buffer. Transferred data length is min of a.Length and hostArray.Lenght.
+</summary>
+</member>
+<member name="M:Brahma.FSharp.OpenCL.Extensions.[]`1.ToGpu``1(``0[],Brahma.OpenCL.ComputeProvider)">
+<summary>
+ Write all data from array a into corresponded buffer.
+</summary>
+</member>
+<member name="M:OpenCL.op_LessBangGreater``1(``0,``0)">
+<summary>
+ Alias for atom_xchg. Returns old value.
+ ### Example
+ let oldV = a.[i] &lt;!&gt; buf
+</summary>
+</member>
+<member name="M:OpenCL.op_LessBang``1(``0,``0)">
+<summary>
+ Alias for atom_xchg. Not returns old value in F#
+ ### Example
+ a.[i] &lt;! buf
+</summary>
+</member>
+<member name="M:OpenCL.op_LessBangMinusGreater(System.Int32,System.Int32)">
+<summary>
+ Alias for atom_sub. Returns old value.
+ ### Example
+ let oldV = a.[i] &lt;!-&gt; buf
+</summary>
+</member>
+<member name="M:OpenCL.op_LessBangMinus(System.Int32,System.Int32)">
+<summary>
+ Alias for atom_sub. Not returns old value in F#. 
+ ### Example
+ a.[i] &lt;!- buf
+</summary>
+</member>
+<member name="M:OpenCL.op_LessBangPlusGreater(System.Int32,System.Int32)">
+<summary>
+ Alias for atom_add. Returns old value.
+ ### Example
+ let oldV = a.[i] &lt;!+&gt; buf
+</summary>
+</member>
+<member name="M:OpenCL.op_LessBangPlus(System.Int32,System.Int32)">
+<summary>
+ Alias for atom_add. Not returns old value in F#.
+ ### Example
+ a.[i] &lt;!+ buf
+</summary>
+</member>
+</members>
+</doc>
