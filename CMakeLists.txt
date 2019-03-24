@@ -32,9 +32,6 @@ add_executable(naiveGPU-shared
 add_executable(m4riGPU
         cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringGpu.cu
         cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringMatrix.cu
-        cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringGpu.h
-        cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringGpu.h
-        cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringMatrix.cu
         cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringMatrix.h
         cuda/methodOf4RusBooleanSemiringGpu/Constants.h
         cuda/methodOf4RusBooleanSemiringGpu/gpuMemoryManagement.cu

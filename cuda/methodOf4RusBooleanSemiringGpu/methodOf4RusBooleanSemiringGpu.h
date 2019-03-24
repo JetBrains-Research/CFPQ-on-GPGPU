@@ -31,8 +31,8 @@ namespace gpu_m4ri {
             num_tables = rows / K; // rows always :32
             num_launches = cols / max_cols;
 
-            if(cols_last != 0) {
-                table_last = allocate_tables(num_tables, TABLE_ROW, cols_last);
+            if(cols_last != 0) { //due to specific alignment in gpu
+                table_last = allocate_tables(num_tables, TABLE_ROW, cols_n);
             }
             if(num_launches != 0) {            
                 table_n = allocate_tables(num_tables, TABLE_ROW, cols_n);
