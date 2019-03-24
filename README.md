@@ -17,8 +17,8 @@
       - [x] sparse boolean matrix multiplication using scipy lib on Python ()
       - [x] naive matrix multiplication on GPU using numba ([#11](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/11))
    - Evaluation:
-      - [ ] graphs
-      - [ ] linear input (optopnal)
+      - [x] graphs
+      - [x] linear input (optopnal)
    - Paper ([TeX sources](https://github.com/YaccConstructor/articles/tree/master/InProgress/CFPQ_on_GPGPU_implementation_comparison))
-      - [ ] Abstract, march 11
-      - [ ] Full text, march 18
+      - [x] Abstract, march 11
+      - [x] Full text, march 18
