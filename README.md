@@ -1,24 +1,21 @@
 # fast boolean semiring matrix multiplication for CFPQ
-## Implementations:
+
+## Implementations
+
 * CPU:
-    * matrix multiplication using m4ri lib
-    * sparse boolean matrix multiplication using libs on Python
+  * matrix multiplication using m4ri lib
+  * sparse boolean matrix multiplication using libs on Python
 * GPU:
-    * naive matrix multiplication with packed into uint32 boolean values
-    * Four Russians method for matrix multiplication with packed into uint32 boolean values
-## TODO list:
-   - Implementation:
-      - [x] CFPQ on C++ ([#4](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/4))
-      - [x] CFPQ on Python ([#9](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/9))
-      - [x] testing and benchmarking system ([#7](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/7))
-      - [x] naive matrix multiplication on GPU ([#5](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/5))
-      - [x] Four Russians method for matrix multiplication on GPU ([#1](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/1))
-      - [x] matrix multiplication using m4ri lib ()
-      - [x] sparse boolean matrix multiplication using scipy lib on Python ()
-      - [x] naive matrix multiplication on GPU using numba ([#11](https://github.com/SokolovYaroslav/fast-boolean-semiring-matrix-multiplication-for-CFPQ/issues/11))
-   - Evaluation:
-      - [x] graphs
-      - [x] linear input (optopnal)
-   - Paper ([TeX sources](https://github.com/YaccConstructor/articles/tree/master/InProgress/CFPQ_on_GPGPU_implementation_comparison))
-      - [x] Abstract, march 11
-      - [x] Full text, march 18
+  * naive matrix multiplication with packed into uint32 boolean values
+  * Four Russians method for matrix multiplication with packed into uint32 boolean values
+
+## Documentation
+
+1. Environment  
+All tests should run inside docker, so first of all you build image via `Dockerfile` in root folder. We use `ubuntu 18.04` with `CUDA` compability as main image and install `anaconda`, `mono`, `m4ri library` and some usefull utilites.  
+Builded image has `CMD` command for automatic testing, when it starts, so you should mount folder with all data and generate test data to `tests.csv`.  
+For example, if your data stores in `data` folder, run docker with this command:  
+
+```(bash)
+docker run -v /<path to project>/data:/data/ <image name>
+```
