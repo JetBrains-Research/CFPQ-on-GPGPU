@@ -13,13 +13,14 @@
 
 1. Run tests  
 All tests should run inside docker, so first of all you should build image via `Dockerfile` in root folder.  
-We use `ubuntu 18.04` with `CUDA` compability as main image and install `anaconda`, `mono`, `m4ri library` and some usefull utilites. Builded image has entrypoint for run testing, so generate tests description file and run docker with mounting data folder.  
+We use `ubuntu 18.04` with `CUDA` compability as main image and install `anaconda`, `mono`, `m4ri library` and some usefull utilites. Builded image has entrypoint for run testing, so generate tests description file and run docker with mounting project root folder.  
 After running tests, you can find `result.csv` file in root folder with time measure for each test and each solution in table format.  
-For example, if your data stores in `data` folder, run docker with this command:  
+For example, run docker with this command:  
 
 ```(bash)
-docker run -v /<path to project>/data:/data/ <image name>
+docker run -v /<path to project>:/work/ <image name>
 ```
+Also, because our solutions use `Cuda`, you cannot run these tests without a `Nvidia` videocard.
 
 2. Tests description  
 Because of large files, we use `git lfs` for storing all data, install it and then you can pull repository with all data files without any other movements.  
