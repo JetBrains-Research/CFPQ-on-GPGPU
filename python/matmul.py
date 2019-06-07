@@ -8,11 +8,9 @@ from scipy.sparse import csr_matrix
 from utils import time_measure
 
 
-threads_size = int(np.sqrt(cuda.get_current_device().MAX_THREADS_PER_BLOCK))
-threadsperblock = (threads_size, threads_size)
+
+threadsperblock = None
 blockspergrid = None
-tpb_x = threadsperblock[0]
-tpb_y = threadsperblock[1]
 size = 1
 matmul_method = None
 
@@ -36,6 +34,8 @@ def initialize_and_compile(mat_size, mat_type):
     if mat_type.startswith('uint'):
         shape[1] = math.ceil(mat_size / float(mat_type[4:]))
     mat = cuda.to_device(np.zeros(tuple(shape), dtype=mat_type))
+    global threadsperblock
+    threadsperblock = (int(np.sqrt(cuda.get_current_device().MAX_THREADS_PER_BLOCK)),) * 2
     blockspergrid = tuple(int(math.ceil(mat_size / threadsperblock[i])) for i in (0, 1))
     is_changed = cuda.device_array((1,), dtype=bool)
 
