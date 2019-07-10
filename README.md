@@ -11,12 +11,12 @@
 
 ## Documentation
 
-Prerequirements.
+### Prerequirements.
 1. [Docker](https://docs.docker.com/) is installed and started.
 2. [Git LFS](https://git-lfs.github.com/) is installed.
 3. Some of the tests require `Cuda`, you cannot run these tests without a `Nvidia` video card. CPU-based implementations can be run anyway.
 
-###Quick start
+### Quick start
 
 0. Clone this repo
  
