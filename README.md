@@ -20,7 +20,7 @@ Prerequirements.
 
 1. Clone this repo
 
-2. Extract Data forlder from Data.tar.xz.
+2. Run 'init.py' script to initialize environment.
 
 3. Build docker image.
 All tests should run inside docker, so first of all you should build image via `Dockerfile` in root folder.  
