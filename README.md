@@ -18,13 +18,15 @@ Prerequirements.
 
 ###Quick start
 
-0. Clone this repo
- 
-1. Build docker image.
+1. Clone this repo
+
+2. Extract Data forlder from Data.tar.xz.
+
+3. Build docker image.
 All tests should run inside docker, so first of all you should build image via `Dockerfile` in root folder.  
 We use `ubuntu 18.04` with `CUDA` compability as main image and install `anaconda`, `mono`, `m4ri library` and some usefull utilites. Builded image has entrypoint for run testing, so generate tests description file and run docker with mounting project root folder.  
 
-2. Generate tests description.
+4. Generate tests description.
 For testing system we use `tests.csv` file which describes all tests, we need it because differents tests may use same files, you can't run testing **without** this file. For creating this file you can use `test_utils/build_testset.py` script, it has only parameter ‒ path to folder with data.  
 For example, if your data stores in `data` folder, run this command for generate tests description:
 
@@ -32,7 +34,7 @@ For example, if your data stores in `data` folder, run this command for generate
 python test_utils/build_testset.py data
 ```
 
-3. Run tests  
+5. Run tests  
 
 Use the following command to run tests.
 ```(bash)
