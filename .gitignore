@@ -21,3 +21,5 @@ cross_val/
 *.pyc
 
 **/Matrices/*
+
+GTgraph/
