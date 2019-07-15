@@ -20,11 +20,11 @@ Prerequirements.
 
 1. Clone this repo
 
-2. Run 'init.py' script to initialize environment.
-
-3. Build docker image.
+2. Build docker image.
 All tests should run inside docker, so first of all you should build image via `Dockerfile` in root folder.  
 We use `ubuntu 18.04` with `CUDA` compability as main image and install `anaconda`, `mono`, `m4ri library` and some usefull utilites. Builded image has entrypoint for run testing, so generate tests description file and run docker with mounting project root folder.  
+
+3. Run 'init.py' script to initialize environment.
 
 4. Generate tests description.
 For testing system we use `tests.csv` file which describes all tests, we need it because differents tests may use same files, you can't run testing **without** this file. For creating this file you can use `test_utils/build_testset.py` script, it has only parameter ‒ path to folder with data.  
