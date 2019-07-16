@@ -22,7 +22,7 @@ Prerequirements.
 
 2. Build docker image.
 All tests should run inside docker, so first of all you should build image via `Dockerfile` in root folder.  
-We use `ubuntu 18.04` with `CUDA` compability as main image and install `anaconda`, `mono`, `m4ri library` and some usefull utilites. Builded image has entrypoint for run testing, so generate tests description file and run docker with mounting project root folder.  
+We use `ubuntu 18.04` with `CUDA` compability as main image and install `anaconda`, `mono`, `m4ri library`, [`GTgraph`](http://www.cse.psu.edu/~kxm85/software/GTgraph/) and some usefull utilites. Builded image has entrypoint for run testing, so generate tests description file and run docker with mounting project root folder.  
 
 3. Run 'init.py' script to initialize environment.
 
