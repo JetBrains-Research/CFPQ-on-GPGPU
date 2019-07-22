@@ -16,15 +16,6 @@ RUN git clone https://voudy@bitbucket.org/vkutuev/m4ri.git && \
     cd m4ri && autoreconf --install && autoreconf --install && \
     ./configure --enable-openmp && make install
 
-# install GTgraph library
-RUN wget http://www.cse.psu.edu/~kxm85/software/GTgraph/GTgraph.tar.gz -O GTgraph.tar.gz -q && \
-    tar -xzf GTgraph.tar.gz 
-RUN cd GTgraph && \
-    sed -i 's/CC = icc/#CC = icc/g' Makefile.var && \
-    sed -i 's/#CC = gcc/CC = gcc/g' Makefile.var && \
-    make 
-RUN rm GTgraph.tar.gz
-
 # install anaconda
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh -q && \
     chmod +x miniconda.sh && \
@@ -43,4 +34,5 @@ RUN apt install -y mono-devel
 RUN mkdir work
 WORKDIR /work
 
-CMD ["python", "testing_system.py", "tests.csv", "init.py"]
+ENTRYPOINT ["python"]
+

@@ -3,8 +3,13 @@ import tarfile
 import os
 import subprocess
 import shutil
+import urllib.request
 
 from contextlib import closing
+
+GT_GRAPH_URL = 'http://www.cse.psu.edu/~kxm85/software/GTgraph/GTgraph.tar.gz'
+GT_GRAPH_ARCH = 'GTgraph.tar.gz'
+
 
 SAPRSE_GRAPH_TO_GEN = [[5000, 0.001], [10000, 0.001], [10000, 0.01], [10000, 0.1], [20000, 0.001], [40000, 0.001], [80000, 0.001]]
 FULL_GRAPH_TO_GEN = [10, 50, 100, 200, 500, 1000, 2000, 5000, 10000, 25000, 50000, 80000]
@@ -16,11 +21,24 @@ DATA_TO_UNPACK = ['MemoryAliases', 'RDF']
 GT_GRAPH = './GTgraph/random/GTgraph-random'
 TMP_FILE = 'tmp.txt'
 
-
 def unpack(file_from, path_to):
     with lzma.open(file_from) as f:
         with tarfile.open(fileobj=f) as tar:
             content = tar.extractall(path_to)
+
+def install_gtgraph():
+    print('Installation of GTgraph is started.')
+    with urllib.request.urlopen(GT_GRAPH_URL) as response, open(GT_GRAPH_ARCH, 'wb') as out_file:
+       shutil.copyfileobj(response, out_file)
+    print('GTgraph is downloaded.')
+    tar = tarfile.open(GT_GRAPH_ARCH)
+    tar.extractall()
+    tar.close()
+
+    subprocess.run(['sed', '-i', 's/CC = icc/#CC = icc/g', './GTgraph/Makefile.var'])
+    subprocess.run(['sed', '-i', 's/#CC = gcc/CC = gcc/g', './GTgraph/Makefile.var'])
+    subprocess.run(['make', '-C', './GTgraph']) 
+    print('Installation of GTgraph is finished.') 
 
 def unpack_graphs():
     for d in DATA_TO_UNPACK:
@@ -93,8 +111,8 @@ def generate_worst_case_graphs():
    for n in range(2, NUMBER_OF_WORST_CASES): gen_worst_case_graph(matrices_dir, 2 ** n)
    print('Worst case graphs generation is finished.')
 
-
 if __name__ == '__main__':
+   install_gtgraph()
    unpack_graphs()
    generate_all_sparse_graphs()
    generate_full_graphs()
