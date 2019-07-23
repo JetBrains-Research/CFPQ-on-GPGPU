@@ -25,7 +25,7 @@ def main(data_folder):
                         n_edge = 0
                         for line in f:
                             n_edge += 1
-                            u, _, v = line.split(' ')
+                            u, _, v = line.strip().split(' ')
                             n_vert = max(n_vert, max(int(u), int(v)))
                         n_vert += 1
                     cache[path_to_matrix] = (n_vert, n_edge)

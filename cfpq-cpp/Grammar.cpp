@@ -29,7 +29,9 @@ Grammar::Grammar(const string &grammar_filename) {
         if (!nonterminal_to_index.count(terms[0])) {
             nonterminal_to_index[terms[0]] = nonterminals_count++;
         }
-        if (terms.size() == 2) {
+        if (terms.size() == 1) {
+            epsilon_nonterminals.push_back(nonterminal_to_index[terms[0]]);
+        } else if (terms.size() == 2) {
             if (!terminal_to_nonterminals.count(terms[1])) {
                 terminal_to_nonterminals[terms[1]] = {};
             }

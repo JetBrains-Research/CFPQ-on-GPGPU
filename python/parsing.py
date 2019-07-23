@@ -1,13 +1,16 @@
 from collections import defaultdict
 
 
-def parse_grammar(_file):
+def parse_grammar(_file, EPS):
     grammar, inverse_grammar = defaultdict(set), defaultdict(set)
     with open(_file, 'rt') as gramm:
         lines = gramm.readlines()
     for line in lines:
-        terms = line.split()
-        if len(terms) == 2:
+        terms = line.strip().split()
+        if len(terms) == 1:
+            grammar[terms[0]].add(EPS)
+            inverse_grammar[EPS].add(terms[0])
+        elif len(terms) == 2:
             grammar[terms[0]].add(terms[1])
             inverse_grammar[terms[1]].add(terms[0])
         elif len(terms) == 3:

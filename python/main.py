@@ -12,13 +12,13 @@ from utils import time_measure, mat_hash
 
 
 VERBOSE = False
-
+EPS = "epsilon"
 
 def main(grammar_file, graph_file, args):
-    grammar, inverse_grammar = parse_grammar(grammar_file)
+    grammar, inverse_grammar = parse_grammar(grammar_file, EPS)
     graph, graph_size = parse_graph(graph_file)
 
-    matrices = get_boolean_adjacency_matrices(grammar, inverse_grammar, graph, graph_size, mat_type=args.type)
+    matrices = get_boolean_adjacency_matrices(grammar, inverse_grammar, graph, graph_size, mat_type=args.type, EPS)
     remove_terminals(grammar, inverse_grammar)
 
     if not args.on_cpu:
