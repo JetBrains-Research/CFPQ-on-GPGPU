@@ -44,6 +44,12 @@ public:
             }
         }
 
+        for (unsigned int nonterm : epsilon_nonterminals) {
+            for (unsigned int i = 0; i < vertices_count; ++i) {
+                matrices[nonterm]->set_bit(i, i);
+            }
+        }
+
         using namespace std::chrono;
         high_resolution_clock::time_point begin_time = high_resolution_clock::now();
         environment->environment_preprocessing(matrices);
@@ -83,6 +89,7 @@ private:
     std::unordered_set<unsigned int> to_recalculate;
     std::vector<std::vector<unsigned int>> rules_with_nonterminal;
     std::map<std::string, unsigned int> nonterminal_to_index;
+    std::vector<unsigned int> epsilon_nonterminals;
     std::unordered_map<std::string, std::vector<int>> terminal_to_nonterminals;
     std::vector<std::pair<unsigned int, nonterminals_pair>> rules;
     std::vector<Matrix *> matrices;

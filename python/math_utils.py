@@ -48,6 +48,9 @@ def get_boolean_adjacency_matrices(grammar, inv_grammar, graph, graph_size, mat_
             if value in inv_grammar:
                 for nonterminal in inv_grammar[value]:
                     set_bit(matrices[nonterminal], row, col)
+    for nonterminal in inv_grammar["epsilon"]:
+        for i in range(graph_size):
+            set_bit(matrices[nonterminal], i, i)
     if mat_type == 'sparse':
         for key in matrices:
             matrices[key] = csr_matrix(([True] * len(matrices[key][0]), matrices[key]),
