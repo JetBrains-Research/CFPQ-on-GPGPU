@@ -4,6 +4,7 @@
 
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 using edge = std::pair<std::string, std::pair<unsigned int, unsigned int>>;
 
@@ -12,6 +13,8 @@ public:
     explicit Graph(const std::string &graph_filename);
 
     virtual ~Graph() = default;
+
+    void fillMatrix(unsigned int ** matrix, const std::unordered_map<std::string, std::vector<int>> &terminal_to_nonterminals);
 
     std::vector<edge> edges;
 

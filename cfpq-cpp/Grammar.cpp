@@ -51,8 +51,24 @@ Grammar::Grammar(const string &grammar_filename) {
 }
 
 Grammar::~Grammar() {
-    for (unsigned int i = 0; i < nonterminals_count; ++i)
+    unsigned int size = nonterminals_count < matrices.size() ? nonterminals_count : matrices.size();
+    for (unsigned int i = 0; i < size; ++i)
         delete matrices[i];
+}
+
+unsigned int Grammar::get_rules_size() {
+    return rules.size();
+}
+
+void Grammar::toArrays(unsigned int * grammar_body, unsigned long long * grammar_tail) {
+    for (size_t i = 0; i < rules.size(); i++) {
+        grammar_body[i] = Matrix::toBoolVector(rules[i].first);
+        grammar_tail[i] = (((unsigned long long)Matrix::toBoolVector(rules[i].second.first)) << 32) | (unsigned long long)Matrix::toBoolVector(rules[i].second.second);
+    }
+}
+
+const std::unordered_map<std::string, std::vector<int>>& Grammar::get_nonterminal_from_terminal() {
+    return terminal_to_nonterminals;
 }
 
 void Grammar::print_results(const string &output_filename) {
