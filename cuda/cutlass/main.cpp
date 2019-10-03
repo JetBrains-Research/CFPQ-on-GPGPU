@@ -5,7 +5,7 @@
 #include <iostream>
 #include "Grammar.h"
 #include "Graph.h"
-#include "CutlassMatrix.cu"
+#include "CutlassMatrix.h"
 
 bool matrixCompare(unsigned int ** matrix1, unsigned int ** matrix2, unsigned int size) {
     for (unsigned int i = 0; i < size; i++) {
@@ -16,6 +16,14 @@ bool matrixCompare(unsigned int ** matrix1, unsigned int ** matrix2, unsigned in
         }
     }
     return true;
+}
+
+void concat(unsigned int ** matrix, unsigned int ** mult_res, int size) {
+    for (unsigned int i = 0; i < size; i++) {
+        for (unsigned int j = 0; j < size; j++) {
+            matrix[i][j] |= mult_res[i][j];
+        }
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -57,7 +65,17 @@ int main(int argc, char *argv[]) {
                 matrixCopy[i][j] = matrix[i][j];
             }
         }
-        matrix = CutlassMatrix::MultMatr(matrix, matrix, (int)graph.vertices_count, grammar_body, grammar_tail, grammar_size);
+
+        unsigned int ** mult_res = CutlassMatrix::MultMatr(matrix, matrix, (int)graph.vertices_count, grammar_body, grammar_tail, grammar_size);
+
+        concat(matrix, mult_res, (int)graph.vertices_count);
+        for (unsigned int i = 0; i < graph.vertices_count; i++) {
+            for (unsigned int j = 0; j < graph.vertices_count; j++) {
+                printf("%p ", matrix[i][j]);
+            }
+            printf("\n");
+        }
+        printf("------------------------------------------------\n");
     }
     return 0;
 }
