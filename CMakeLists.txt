@@ -47,4 +47,13 @@ add_executable(m4riCPU
         m4ri/m4ri_matrix.cpp
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
         )
+
+add_executable(graphBlasCPU
+        graphBlas/main.cpp
+        graphBlas/graphblas_matrix.h
+        graphBlas/graphblas_matrix.cpp
+        cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
+        )
+
+target_link_libraries(graphBlasCPU graphblas)
 target_link_libraries(m4riCPU m4ri)

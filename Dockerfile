@@ -31,6 +31,12 @@ RUN apt install gnupg ca-certificates && \
     apt update
 RUN apt install -y mono-devel
 
+#install m4
+RUN apt-get install m4 && \
+    wget http://faculty.cse.tamu.edu/davis/GraphBLAS/GraphBLAS-3.1.0.tar.gz &&  tar -zxvf GraphBLAS*.tar.gz && rm *.tar.gz && cd GraphBLAS/ && \
+    JOBS=32 CC=gcc make && make install
+
+
 RUN mkdir work
 WORKDIR /work
 
