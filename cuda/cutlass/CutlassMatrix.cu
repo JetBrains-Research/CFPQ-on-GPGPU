@@ -14,6 +14,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <chrono>
 
 
 //
@@ -293,6 +294,9 @@ unsigned int * CutlassGemmSquare(
         unsigned int * matrixA = nullptr) {
     cudaError_t result;
 
+    using namespace std::chrono;
+    high_resolution_clock::time_point begin_time = high_resolution_clock::now();
+
     // Compute leading dimensions for each matrix.
     int lda = dim;
     int ldc = dim;
@@ -300,7 +304,7 @@ unsigned int * CutlassGemmSquare(
     // Compute size in bytes of the C matrix.
     size_t sizeof_C = sizeof(unsigned int) * ldc * dim;
 
-    // Define pointers to matrices in GPU device memory.
+    // Define pointers to mathigh_resolution_clock::time_point algorithm_begin_time = high_resolution_clock::now();rices in GPU device memory.
     unsigned int *A;
     unsigned int *C_cutlass;
 
@@ -333,6 +337,8 @@ unsigned int * CutlassGemmSquare(
 
     unsigned int * host_cutlass = (unsigned int *)calloc(ldc * dim, sizeof(unsigned int));
 //    unsigned int * A_r = (unsigned int *)calloc(lda * dim, sizeof(unsigned int));
+
+    high_resolution_clock::time_point algorithm_begin_time = high_resolution_clock::now();
 
     while(isChangedHost) {
         result = CutlassSgemmNN(dim, dim, dim, alpha, A, lda, A, lda, beta, C_cutlass, ldc);
@@ -380,6 +386,8 @@ unsigned int * CutlassGemmSquare(
         }
     }
 
+    high_resolution_clock::time_point algorithm_end_time = high_resolution_clock::now();
+
     result = cudaMemcpy(host_cutlass, C_cutlass, sizeof_C, cudaMemcpyDeviceToHost);
     if (result != cudaSuccess) {
         std::cerr << "Failed to copy CUTLASS GEMM results: "
@@ -397,6 +405,17 @@ unsigned int * CutlassGemmSquare(
 
     cudaFree(C_cutlass);
     cudaFree(A);
+
+    high_resolution_clock::time_point end_time = high_resolution_clock::now();
+
+    milliseconds algorithm_elapsed_secs = duration_cast<milliseconds>(algorithm_end_time - algorithm_begin_time);
+    milliseconds elapsed_secs = duration_cast<milliseconds>(end_time - begin_time);
+
+    printf(
+            "Algorithm time: %u\nTotal time: %u\n",
+            (unsigned int)algorithm_elapsed_secs.count(),
+            (unsigned int)elapsed_secs.count()
+    );
 
     return host_cutlass;
 }
@@ -426,32 +445,33 @@ unsigned int ** CutlassMatrix::MultMatrSquare(unsigned int ** A, int size, unsig
     cudaError_t result;
     result = cudaMalloc((void**)&global_device_grammar_body, grammar_size * sizeof(unsigned int));
     if (result != cudaSuccess) {
-        std::cerr << "Failed to copy CUTLASS Loop results to next iteration: "
+        std::cerr << "Failed to malloc grammar body: "
                   << cudaGetErrorString(result) << std::endl;
         return nullptr;
     }
     result = cudaMalloc((void**)&global_device_grammar_tail, grammar_size * sizeof(unsigned long long));
     if (result != cudaSuccess) {
-        std::cerr << "Failed to copy CUTLASS Loop results to next iteration: "
+        std::cerr << "Failed to malloc gramar tail: "
                   << cudaGetErrorString(result) << std::endl;
         return nullptr;
     }
     result = cudaMemcpy(global_device_grammar_body, grammar_body, grammar_size * sizeof(unsigned int), cudaMemcpyHostToDevice);
     if (result != cudaSuccess) {
-        std::cerr << "Failed to copy CUTLASS Loop results to next iteration: "
+        std::cerr << "Failed to copy grammar body: "
                   << cudaGetErrorString(result) << std::endl;
         return nullptr;
     }
     result = cudaMemcpy(global_device_grammar_tail, grammar_tail, grammar_size * sizeof(unsigned long long), cudaMemcpyHostToDevice);
     if (result != cudaSuccess) {
-        std::cerr << "Failed to copy CUTLASS Loop results to next iteration: "
+        std::cerr << "Failed to copy grammar tail: "
                   << cudaGetErrorString(result) << std::endl;
         return nullptr;
     }
+
+
     set_grammar<<<1,1>>>(global_device_grammar_body, global_device_grammar_tail, grammar_size);
 
     cudaDeviceSynchronize();
-    cudaGetLastError();
 
     //
     // Run the CUTLASS GEMM test.
