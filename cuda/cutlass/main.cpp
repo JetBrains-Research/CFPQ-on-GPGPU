@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
         }
         printf("\n");
     }
+    printf("Was that elem: %p\n", matrix[0][1]);
 
     unsigned int ** mult_res = CutlassMatrix::MultMatrSquare(matrix, (int)graph.vertices_count, grammar_body, grammar_tail, grammar_size);
 
@@ -46,6 +47,17 @@ int main(int argc, char *argv[]) {
         }
         printf("\n");
     }
+
+    int sum = 0;
+    for (unsigned int i = 0; i < graph.vertices_count; i++) {
+        for (unsigned int j = 0; j < graph.vertices_count; j++) {
+            if ((mult_res[i][j] & 0x1) == 0x1) {
+                sum++;
+            }
+        }
+        //printf("\n");
+    }
+    printf("Answer: %d\n",sum);
 
     return 0;
 }

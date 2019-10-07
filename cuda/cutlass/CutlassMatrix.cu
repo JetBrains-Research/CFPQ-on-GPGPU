@@ -15,6 +15,7 @@
 #include <sstream>
 #include <vector>
 #include <chrono>
+#include <cmath>
 
 
 //
@@ -274,12 +275,14 @@ __global__ void resetChanges(bool * isChangedGlobal) {
 
 // Kernel for matrix sum and checking if they have changed
 __global__ void MatAddKernel(unsigned int* A, unsigned int* B, unsigned int* C, int matDim){
-    int i = threadIdx.x;
-    int j = threadIdx.y;
-
-    C[i * matDim + j] = A[i * matDim + j] | B[i * matDim + j];
-    if (C[i * matDim + j] != B[i * matDim + j]) {
-        *isChanged = true;
+    int col = threadIdx.x + blockIdx.x * blockDim.x;
+    int row = threadIdx.y + blockIdx.y * blockDim.y;
+    int index = col + row * matDim;
+    if (col < matDim && row < matDim) {
+        C[index] = A[index] | B[index];
+        if (C[index] != B[index]) {
+            *isChanged = true;
+        }
     }
 }
 
@@ -332,8 +335,8 @@ unsigned int * CutlassGemmSquare(
     bool isChangedHost = true;
     bool * isChangedGlobal;
     cudaMalloc((void**)&isChangedGlobal, sizeof(bool));
-    int numBlocks = 1;
-    dim3 threadsPerBlock(dim, dim);
+    dim3 dimBlock(16, 16);
+    dim3 dimGrid((int)ceil((double)dim / dimBlock.x), (int)ceil((double)dim / dimBlock.y));
 
     unsigned int * host_cutlass = (unsigned int *)calloc(ldc * dim, sizeof(unsigned int));
 //    unsigned int * A_r = (unsigned int *)calloc(lda * dim, sizeof(unsigned int));
@@ -352,8 +355,20 @@ unsigned int * CutlassGemmSquare(
         }
 
         resetChanges<<<1,1>>>(isChangedGlobal);
-        MatAddKernel<<<numBlocks,threadsPerBlock>>>(C_cutlass, A, C_cutlass, dim);
+        MatAddKernel<<<dimGrid, dimBlock>>>(C_cutlass, A, C_cutlass, dim);
         cudaMemcpy(&isChangedHost, isChangedGlobal, sizeof(bool), cudaMemcpyDeviceToHost);
+
+        result = cudaMemcpy(host_cutlass, C_cutlass, sizeof_C, cudaMemcpyDeviceToHost);
+        if (result != cudaSuccess) {
+            std::cerr << "Failed to copy CUTLASS GEMM results: "
+                      << cudaGetErrorString(result) << std::endl;
+
+            cudaFree(C_cutlass);
+            cudaFree(A);
+
+            return nullptr;
+        }
+
 
 
 //        result = cudaMemcpy(A_r, A, sizeof_A, cudaMemcpyDeviceToHost);
