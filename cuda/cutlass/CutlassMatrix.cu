@@ -358,38 +358,6 @@ unsigned int * CutlassGemmSquare(
         MatAddKernel<<<dimGrid, dimBlock>>>(C_cutlass, A, C_cutlass, dim);
         cudaMemcpy(&isChangedHost, isChangedGlobal, sizeof(bool), cudaMemcpyDeviceToHost);
 
-        result = cudaMemcpy(host_cutlass, C_cutlass, sizeof_C, cudaMemcpyDeviceToHost);
-        if (result != cudaSuccess) {
-            std::cerr << "Failed to copy CUTLASS GEMM results: "
-                      << cudaGetErrorString(result) << std::endl;
-
-            cudaFree(C_cutlass);
-            cudaFree(A);
-
-            return nullptr;
-        }
-
-
-
-//        result = cudaMemcpy(A_r, A, sizeof_A, cudaMemcpyDeviceToHost);
-
-
-//        for (int i = 0; i < 16; i++) {
-//            if (i % 4 == 0) {
-//                printf("\n");
-//            }
-//            printf("%p ", A_r[i]);
-//        }
-//        printf("\n");
-//
-//        for (int i = 0; i < 16; i++) {
-//            if (i % 4 == 0) {
-//                printf("\n");
-//            }
-//            printf("%p ", host_cutlass[i]);
-//        }
-//        printf("\n");
-
         result = cudaMemcpy(A, C_cutlass, sizeof_C, cudaMemcpyDeviceToDevice);
 
         if (result != cudaSuccess) {
@@ -449,7 +417,7 @@ unsigned int ** CutlassMatrix::MultMatrSquare(unsigned int ** A, int size, unsig
     unsigned int * matrixA = new unsigned int[size * size];
     for (int i = 0; i < size; i++) {
         for (int j = 0; j < size; j++) {
-            int offset = i * size + j;
+            int offset = i + j * size;
             matrixA[offset] = A[i][j];
         }
     }
@@ -506,7 +474,7 @@ unsigned int ** CutlassMatrix::MultMatrSquare(unsigned int ** A, int size, unsig
 
     for (unsigned int i = 0; i < size; i++) {
         for (unsigned int j = 0; j < size; j++) {
-            output[i][j] = res[i * size + j];
+            output[i][j] = res[i + j * size];
         }
     }
 

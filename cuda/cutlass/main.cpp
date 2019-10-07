@@ -29,24 +29,23 @@ int main(int argc, char *argv[]) {
     }
     graph.fillMatrix(matrix, grammar.get_nonterminal_from_terminal());
 
-    printf("Matrix:\n");
-    for (unsigned int i = 0; i < graph.vertices_count; i++) {
-        for (unsigned int j = 0; j < graph.vertices_count; j++) {
-            printf("%p ", matrix[i][j]);
-        }
-        printf("\n");
-    }
-    printf("Was that elem: %p\n", matrix[0][1]);
+//    printf("Matrix:\n");
+//    for (unsigned int i = 0; i < graph.vertices_count; i++) {
+//        for (unsigned int j = 0; j < graph.vertices_count; j++) {
+//            printf("%p ", matrix[i][j]);
+//        }
+//        printf("\n");
+//    }
 
     unsigned int ** mult_res = CutlassMatrix::MultMatrSquare(matrix, (int)graph.vertices_count, grammar_body, grammar_tail, grammar_size);
 
-    printf("Result:\n");
-    for (unsigned int i = 0; i < graph.vertices_count; i++) {
-        for (unsigned int j = 0; j < graph.vertices_count; j++) {
-            printf("%p ", mult_res[i][j]);
-        }
-        printf("\n");
-    }
+//    printf("Result:\n");
+//    for (unsigned int i = 0; i < graph.vertices_count; i++) {
+//        for (unsigned int j = 0; j < graph.vertices_count; j++) {
+//            printf("%p ", mult_res[i][j]);
+//        }
+//        printf("\n");
+//    }
 
     int sum = 0;
     for (unsigned int i = 0; i < graph.vertices_count; i++) {
@@ -55,9 +54,8 @@ int main(int argc, char *argv[]) {
                 sum++;
             }
         }
-        //printf("\n");
     }
-    printf("Answer: %d\n",sum);
+    printf("Answer (amount of start nonterminals in final matrix): %d\n", sum);
 
     return 0;
 }
