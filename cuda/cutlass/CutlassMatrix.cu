@@ -1,5 +1,5 @@
 //
-// Created by adminlinux on 24.09.2019.
+// Created by DmiitriiJarosh on 24.09.2019.
 //
 
 #define __CUDA_LIBDEVICE__
@@ -153,17 +153,10 @@ __global__ void InitializeMatrix_kernel(
 }
 
 /// Simple function to initialize a matrix to arbitrary small integers.
-cudaError_t InitializeMatrix(unsigned int *matrix, int ldm, int rows, int columns, unsigned int ** matrix_data = nullptr) {
+cudaError_t InitializeMatrix(unsigned int *matrix, int ldm, int rows, int columns, unsigned int * matrix_data = nullptr) {
 
     if (matrix_data != nullptr) {
-        unsigned int * matrix_in_line = new unsigned int[rows * columns];
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                int offset = i + j * ldm;
-                matrix_in_line[offset] = matrix_data[i][j];
-            }
-        }
-        cudaMemcpy(matrix, matrix_in_line, rows * columns * sizeof(unsigned int), cudaMemcpyHostToDevice);
+        cudaMemcpy(matrix, matrix_data, rows * columns * sizeof(unsigned int), cudaMemcpyHostToDevice);
         return cudaGetLastError();
     }
 
@@ -181,7 +174,7 @@ cudaError_t InitializeMatrix(unsigned int *matrix, int ldm, int rows, int column
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Allocates device memory for a matrix then fills with arbitrary small integers.
-cudaError_t AllocateMatrix(unsigned int **matrix, int ldm, int rows, int columns, unsigned int ** matrix_data = nullptr) {
+cudaError_t AllocateMatrix(unsigned int **matrix, int ldm, int rows, int columns, unsigned int * matrix_data = nullptr) {
     cudaError_t result;
 
     size_t sizeof_matrix = sizeof(unsigned int) * ldm * columns;
@@ -271,167 +264,138 @@ cudaError_t ReferenceGemm(
     return cudaGetLastError();
 }
 
+__device__ bool * isChanged;
+
+__global__ void resetChanges(bool * isChangedGlobal) {
+    isChanged = isChangedGlobal;
+    *isChanged = false;
+}
+
+// Kernel for matrix sum and checking if they have changed
+__global__ void MatAddKernel(unsigned int* A, unsigned int* B, unsigned int* C, int matDim){
+    int i = threadIdx.x;
+    int j = threadIdx.y;
+
+    C[i * matDim + j] = A[i * matDim + j] | B[i * matDim + j];
+    if (C[i * matDim + j] != B[i * matDim + j]) {
+        *isChanged = true;
+    }
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Allocate several matrices in GPU device memory and call a single-precision
 /// CUTLASS GEMM kernel.
-unsigned int * TestCutlassGemm(int M, int N, int K, unsigned int alpha, unsigned int beta, unsigned int ** matrixA = nullptr,
-                            unsigned int ** matrixB = nullptr) {
+unsigned int * CutlassGemmSquare(
+        int dim,
+        unsigned int alpha,
+        unsigned int beta,
+        unsigned int * matrixA = nullptr) {
     cudaError_t result;
 
-    //
-    // Define several matrices to be used as operands to GEMM kernels.
-    //
-
     // Compute leading dimensions for each matrix.
-    int lda = M;
-    int ldb = K;
-    int ldc = M;
+    int lda = dim;
+    int ldc = dim;
 
     // Compute size in bytes of the C matrix.
-    size_t sizeof_C = sizeof(unsigned int) * ldc * N;
-    size_t sizeof_A = sizeof(unsigned int) * lda * N;
-    size_t sizeof_B = sizeof(unsigned int) * ldb * N;
+    size_t sizeof_C = sizeof(unsigned int) * ldc * dim;
 
     // Define pointers to matrices in GPU device memory.
     unsigned int *A;
-    unsigned int *B;
     unsigned int *C_cutlass;
-    unsigned int *C_reference;
 
     //
     // Allocate matrices in GPU device memory with arbitrary seeds.
     //
 
-    result = AllocateMatrix(&A, lda, M, K, matrixA);
+    result = AllocateMatrix(&A, lda, dim, dim, matrixA);
 
     if (result !=  cudaSuccess) {
         return nullptr;
     }
 
-    result = AllocateMatrix(&B, ldb, K, N, matrixB);
-
-    if (result !=  cudaSuccess) {
-        cudaFree(A);
-        return nullptr;
-    }
-
-    result = AllocateMatrix(&C_cutlass, ldc, M, N, nullptr);
+    result = AllocateMatrix(&C_cutlass, ldc, dim, dim, nullptr);
 
     if (result != cudaSuccess) {
         cudaFree(A);
-        cudaFree(B);
-        return nullptr;
-    }
-
-    result = AllocateMatrix(&C_reference, ldc, M, N, nullptr);
-
-    if (result != cudaSuccess) {
-        cudaFree(A);
-        cudaFree(B);
-        cudaFree(C_cutlass);
-        return nullptr;
-    }
-
-    result = cudaMemcpy(C_reference, C_cutlass, sizeof_C, cudaMemcpyDeviceToDevice);
-
-    if (result != cudaSuccess) {
-        std::cerr << "Failed to copy C_cutlass matrix to C_reference: "
-                  << cudaGetErrorString(result) << std::endl;
-
-        cudaFree(C_reference);
-        cudaFree(C_cutlass);
-        cudaFree(B);
-        cudaFree(A);
-
         return nullptr;
     }
 
     //
-    // Launch CUTLASS GEMM.
+    // Launch Main Loop.
     //
 
-    result = CutlassSgemmNN(M, N, K, alpha, A, lda, B, ldb, beta, C_cutlass, ldc);
+    bool isChangedHost = true;
+    bool * isChangedGlobal;
+    cudaMalloc((void**)&isChangedGlobal, sizeof(bool));
+    int numBlocks = 1;
+    dim3 threadsPerBlock(dim, dim);
 
-    if (result != cudaSuccess) {
-        std::cerr << "CUTLASS GEMM kernel failed: "
-                  << cudaGetErrorString(result) << std::endl;
+    unsigned int * host_cutlass = (unsigned int *)calloc(ldc * dim, sizeof(unsigned int));
+//    unsigned int * A_r = (unsigned int *)calloc(lda * dim, sizeof(unsigned int));
 
-        cudaFree(C_reference);
-        cudaFree(C_cutlass);
-        cudaFree(B);
-        cudaFree(A);
+    while(isChangedHost) {
+        result = CutlassSgemmNN(dim, dim, dim, alpha, A, lda, A, lda, beta, C_cutlass, ldc);
 
-        return nullptr;
+        if (result != cudaSuccess) {
+            std::cerr << "CUTLASS GEMM kernel failed: "
+                      << cudaGetErrorString(result) << std::endl;
+            cudaFree(C_cutlass);
+            cudaFree(A);
+            return nullptr;
+        }
+
+        resetChanges<<<1,1>>>(isChangedGlobal);
+        MatAddKernel<<<numBlocks,threadsPerBlock>>>(C_cutlass, A, C_cutlass, dim);
+        cudaMemcpy(&isChangedHost, isChangedGlobal, sizeof(bool), cudaMemcpyDeviceToHost);
+
+
+//        result = cudaMemcpy(A_r, A, sizeof_A, cudaMemcpyDeviceToHost);
+
+
+//        for (int i = 0; i < 16; i++) {
+//            if (i % 4 == 0) {
+//                printf("\n");
+//            }
+//            printf("%p ", A_r[i]);
+//        }
+//        printf("\n");
+//
+//        for (int i = 0; i < 16; i++) {
+//            if (i % 4 == 0) {
+//                printf("\n");
+//            }
+//            printf("%p ", host_cutlass[i]);
+//        }
+//        printf("\n");
+
+        result = cudaMemcpy(A, C_cutlass, sizeof_C, cudaMemcpyDeviceToDevice);
+
+        if (result != cudaSuccess) {
+            std::cerr << "Failed to copy CUTLASS Loop results to next iteration: "
+                      << cudaGetErrorString(result) << std::endl;
+            cudaFree(C_cutlass);
+            cudaFree(A);
+            return nullptr;
+        }
     }
 
-    // Copy to host and verify equivalence.
-    unsigned int * host_cutlass = (unsigned int *)calloc(ldc * N, sizeof(unsigned int));
-//    unsigned int * host_reference = (unsigned int *)calloc(ldc * N, sizeof(unsigned int));
-    unsigned int * A_r = (unsigned int *)calloc(lda * N, sizeof(unsigned int));
-    unsigned int * B_r = (unsigned int *)calloc(ldb * N, sizeof(unsigned int));
-
-    result = cudaMemcpy(A_r, A, sizeof_A, cudaMemcpyDeviceToHost);
-    result = cudaMemcpy(B_r, B, sizeof_B, cudaMemcpyDeviceToHost);
     result = cudaMemcpy(host_cutlass, C_cutlass, sizeof_C, cudaMemcpyDeviceToHost);
-
     if (result != cudaSuccess) {
         std::cerr << "Failed to copy CUTLASS GEMM results: "
                   << cudaGetErrorString(result) << std::endl;
 
-        cudaFree(C_reference);
         cudaFree(C_cutlass);
-        cudaFree(B);
         cudaFree(A);
 
         return nullptr;
     }
-
-//    result = cudaMemcpy(host_reference, C_reference, sizeof_C, cudaMemcpyDeviceToHost);
-
-//    if (result != cudaSuccess) {
-//        std::cerr << "Failed to copy Reference GEMM results: "
-//                  << cudaGetErrorString(result) << std::endl;
-//
-//        cudaFree(C_reference);
-//        cudaFree(C_cutlass);
-//        cudaFree(B);
-//        cudaFree(A);
-//
-//        return nullptr;
-//    }
-
-//    for (int i = 0; i < 16; i++) {
-//        if (i % 4 == 0) {
-//            std::cout << std::endl;
-//        }
-//        std::cout << A_r[i] << " ";
-//    }
-//    std::cout << std::endl;
-//
-//    for (int i = 0; i < 16; i++) {
-//        if (i % 4 == 0) {
-//            std::cout << std::endl;
-//        }
-//        std::cout << B_r[i] << " ";
-//    }
-//    std::cout << std::endl;
-//
-//    for (int i = 0; i < 16; i++) {
-//        if (i % 4 == 0) {
-//            std::cout << std::endl;
-//        }
-//        std::cout << host_cutlass[i] << " ";
-//    }
-//    std::cout << std::endl;
 
     //
     // Free device memory allocations.
     //
 
-    cudaFree(C_reference);
     cudaFree(C_cutlass);
-    cudaFree(B);
     cudaFree(A);
 
     return host_cutlass;
@@ -444,69 +408,60 @@ __global__ void set_grammar(unsigned int * global_device_grammar_body, unsigned 
     device_grammar_size = grammar_size;
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////
-
-/// Entry point to basic_gemm example.
-//
-// usage:
-//
-//   my_mult_example <M> <N> <K> <alpha> <beta>
-//
-
-unsigned int ** CutlassMatrix::MultMatr(unsigned int ** matrixA, unsigned int ** matrixB, int size, unsigned int * grammar_body, unsigned long long * grammar_tail, int grammar_size) {
-
-    //
-    // Parse the command line to obtain GEMM dimensions and scalar values.
-    //
-
-    // GEMM problem dimensions.
-    int problem[3] = { size, size, size };
-
+unsigned int ** CutlassMatrix::MultMatrSquare(unsigned int ** A, int size, unsigned int * grammar_body, unsigned long long * grammar_tail, int grammar_size) {
     // Scalars used for linear scaling the result of the matrix product.
     unsigned int scalars[2] = { 1, 0 };
 
-//    unsigned int ** matrixA = new unsigned int*[4];
-//    matrixA[0] = new unsigned int[4]{0,0,0,0x1};
-//    matrixA[1] = new unsigned int[4]{0,0,0,0};
-//    matrixA[2] = new unsigned int[4]{0,0,0,0};
-//    matrixA[3] = new unsigned int[4]{0x10,0,0,0};
-//
-//    unsigned int ** matrixB = new unsigned int*[4];
-//    matrixB[0] = new unsigned int[4]{0,0,0,0x1};
-//    matrixB[1] = new unsigned int[4]{0,0,0,0};
-//    matrixB[2] = new unsigned int[4]{0,0,0,0};
-//    matrixB[3] = new unsigned int[4]{0x10,0,0,0};
-
-//    int grammar_size = 3;
-//    unsigned int * grammar_body = new unsigned int[grammar_size]{0x1,0x100,0x10};
-//    unsigned long long * grammar_tail = new unsigned long long[grammar_size]{0x100000010,0x100000010,0x10};
+    unsigned int * matrixA = new unsigned int[size * size];
+    for (int i = 0; i < size; i++) {
+        for (int j = 0; j < size; j++) {
+            int offset = i * size + j;
+            matrixA[offset] = A[i][j];
+        }
+    }
 
     unsigned int * global_device_grammar_body = nullptr;
     unsigned long long * global_device_grammar_tail = nullptr;
 
-    cudaMalloc((void**)&global_device_grammar_body, grammar_size * sizeof(unsigned int));
-    cudaMalloc((void**)&global_device_grammar_tail, grammar_size * sizeof(unsigned long long));
-
-    cudaMemcpy(global_device_grammar_body, grammar_body, grammar_size * sizeof(unsigned int), cudaMemcpyHostToDevice);
-    cudaMemcpy(global_device_grammar_tail, grammar_tail, grammar_size * sizeof(unsigned long long), cudaMemcpyHostToDevice);
-
+    cudaError_t result;
+    result = cudaMalloc((void**)&global_device_grammar_body, grammar_size * sizeof(unsigned int));
+    if (result != cudaSuccess) {
+        std::cerr << "Failed to copy CUTLASS Loop results to next iteration: "
+                  << cudaGetErrorString(result) << std::endl;
+        return nullptr;
+    }
+    result = cudaMalloc((void**)&global_device_grammar_tail, grammar_size * sizeof(unsigned long long));
+    if (result != cudaSuccess) {
+        std::cerr << "Failed to copy CUTLASS Loop results to next iteration: "
+                  << cudaGetErrorString(result) << std::endl;
+        return nullptr;
+    }
+    result = cudaMemcpy(global_device_grammar_body, grammar_body, grammar_size * sizeof(unsigned int), cudaMemcpyHostToDevice);
+    if (result != cudaSuccess) {
+        std::cerr << "Failed to copy CUTLASS Loop results to next iteration: "
+                  << cudaGetErrorString(result) << std::endl;
+        return nullptr;
+    }
+    result = cudaMemcpy(global_device_grammar_tail, grammar_tail, grammar_size * sizeof(unsigned long long), cudaMemcpyHostToDevice);
+    if (result != cudaSuccess) {
+        std::cerr << "Failed to copy CUTLASS Loop results to next iteration: "
+                  << cudaGetErrorString(result) << std::endl;
+        return nullptr;
+    }
     set_grammar<<<1,1>>>(global_device_grammar_body, global_device_grammar_tail, grammar_size);
 
     cudaDeviceSynchronize();
+    cudaGetLastError();
 
     //
     // Run the CUTLASS GEMM test.
     //
 
-
-    unsigned int * res = TestCutlassGemm(
-            problem[0],     // GEMM M dimension
-            problem[1],     // GEMM N dimension
-            problem[2],     // GEMM K dimension
+    unsigned int * res = CutlassGemmSquare(
+            size,
             scalars[0],     // alpha
             scalars[1],     // beta
-            matrixA,
-            matrixB
+            matrixA
     );
 
     unsigned int ** output = new unsigned int*[size];
@@ -522,5 +477,3 @@ unsigned int ** CutlassMatrix::MultMatr(unsigned int ** matrixA, unsigned int **
 
     return output;
 }
-
-///////////////////////////////////////////////////////////////////////////////////////////////////

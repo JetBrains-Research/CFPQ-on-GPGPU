@@ -29,6 +29,13 @@ add_executable(naiveGPU-shared
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
         )
 
+add_executable(cutlassGPU
+        cuda/cutlass/main.cpp
+        cuda/cutlass/CutlassMatrix.cu
+        cuda/cutlass/CutlassMatrix.h
+        cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
+        )
+
 add_executable(m4riGPU
         cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringGpu.cu
         cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringMatrix.cu
