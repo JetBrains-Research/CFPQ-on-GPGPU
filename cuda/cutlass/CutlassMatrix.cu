@@ -161,7 +161,6 @@ cudaError_t InitializeMatrix(unsigned int *matrix, int ldm, int rows, int column
         cudaMemcpy(matrix, matrix_data, rows * columns * sizeof(unsigned int), cudaMemcpyHostToDevice);
         return cudaGetLastError();
     }
-
     dim3 block(16, 16);
     dim3 grid(
             (rows + block.x - 1) / block.x,
@@ -403,13 +402,6 @@ unsigned int * CutlassGemmSquare(
     return host_cutlass;
 }
 
-// function which set grammar to device for special multiplication
-__global__ void set_grammar(unsigned int * global_device_grammar_body, unsigned long long * global_device_grammar_tail, int grammar_size) {
-    device_grammar_body = global_device_grammar_body;
-    device_grammar_tail = global_device_grammar_tail;
-    device_grammar_size = grammar_size;
-}
-
 unsigned int ** CutlassMatrix::MultMatrSquare(unsigned int ** A, int size, unsigned int * grammar_body, unsigned long long * grammar_tail, int grammar_size) {
     // Scalars used for linear scaling the result of the matrix product.
     unsigned int scalars[2] = { 1, 0 };
@@ -440,20 +432,35 @@ unsigned int ** CutlassMatrix::MultMatrSquare(unsigned int ** A, int size, unsig
     }
     result = cudaMemcpy(global_device_grammar_body, grammar_body, grammar_size * sizeof(unsigned int), cudaMemcpyHostToDevice);
     if (result != cudaSuccess) {
-        std::cerr << "Failed to copy grammar body: "
+        std::cerr << "Failed to copy grammar body to device: "
                   << cudaGetErrorString(result) << std::endl;
         return nullptr;
     }
     result = cudaMemcpy(global_device_grammar_tail, grammar_tail, grammar_size * sizeof(unsigned long long), cudaMemcpyHostToDevice);
     if (result != cudaSuccess) {
-        std::cerr << "Failed to copy grammar tail: "
+        std::cerr << "Failed to copy grammar tail to device: "
                   << cudaGetErrorString(result) << std::endl;
         return nullptr;
     }
 
-
-    set_grammar<<<1,1>>>(global_device_grammar_body, global_device_grammar_tail, grammar_size);
-
+    result = cudaMemcpyToSymbol(device_grammar_body, global_device_grammar_body, grammar_size * sizeof(unsigned int));
+    if (result != cudaSuccess) {
+        std::cerr << "Failed to copy grammar body to __const__: "
+                  << cudaGetErrorString(result) << std::endl;
+        return nullptr;
+    }
+    result = cudaMemcpyToSymbol(device_grammar_tail, global_device_grammar_tail, grammar_size * sizeof(unsigned long long));
+    if (result != cudaSuccess) {
+        std::cerr << "Failed to copy grammar tail to __const__: "
+                  << cudaGetErrorString(result) << std::endl;
+        return nullptr;
+    }
+    result = cudaMemcpyToSymbol(device_grammar_size, &grammar_size, sizeof(int));
+    if (result != cudaSuccess) {
+        std::cerr << "Failed to copy grammar size to __const__: "
+                  << cudaGetErrorString(result) << std::endl;
+        return nullptr;
+    }
     cudaDeviceSynchronize();
 
     //
