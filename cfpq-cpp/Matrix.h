@@ -19,6 +19,10 @@ public:
     static unsigned int toBoolVector(unsigned int number) {
         return ((unsigned int)0x1) << number;
     }
+
+    static unsigned char toBoolVector8(unsigned int number) {
+        return ((unsigned char)0x1) << number;
+    }
 };
 
 class MatricesEnv {

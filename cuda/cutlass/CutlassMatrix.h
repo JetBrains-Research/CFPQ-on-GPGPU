@@ -10,15 +10,6 @@
 
 class CutlassMatrix : public Matrix {
 public:
-
-//    ~CutlassMatrix() override;
-//
-//    void set_bit(unsigned int row, unsigned col) override;
-//
-//    unsigned int get_bit(unsigned int row, unsigned col) override;
-//
-//    bool add_mul(Matrix *left, Matrix *right) override;
-
     static unsigned int ** MultMatrSquare(unsigned int ** A, int size, unsigned int * grammar_body, unsigned long long * grammar_tail, int grammar_size);
 };
 

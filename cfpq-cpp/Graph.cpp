@@ -32,3 +32,17 @@ void Graph::fillMatrix(unsigned int ** matrix, const std::unordered_map<std::str
         matrix[edge.second.first][edge.second.second] = bool_vector;
     }
 }
+
+void Graph::fillMatrix(unsigned char ** matrix, const std::unordered_map<std::string, std::vector<int>> &terminal_to_nonterminals) {
+    for (auto & edge : edges) {
+        if (terminal_to_nonterminals.count(edge.first) == 0) {
+            continue;
+        }
+        auto nonterminals = terminal_to_nonterminals.at(edge.first);
+        unsigned char bool_vector = 0;
+        for (auto nonterminal : nonterminals) {
+            bool_vector |= Matrix::toBoolVector8(nonterminal);
+        }
+        matrix[edge.second.first][edge.second.second] = bool_vector;
+    }
+}

@@ -36,6 +36,11 @@ add_executable(cutlassGPU
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
         )
 
+add_executable(cutlassGPU8
+        cuda/cutlass8/main.cpp
+        cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
+        cuda/cutlass8/CutlassMatrix8Bit.cu cuda/cutlass8/CutlassMatrix8Bit.h)
+
 add_executable(m4riGPU
         cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringGpu.cu
         cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringMatrix.cu

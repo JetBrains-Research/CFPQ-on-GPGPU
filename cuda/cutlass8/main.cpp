@@ -5,15 +5,15 @@
 #include <iostream>
 #include "Grammar.h"
 #include "Graph.h"
-#include "CutlassMatrix.h"
+#include "CutlassMatrix8Bit.h"
 
 int main(int argc, char *argv[]) {
     Grammar grammar = Grammar(argv[1]);
 
     size_t grammar_size = grammar.get_rules_size();
-    auto grammar_body = new unsigned int[grammar_size];
-    auto grammar_tail = new unsigned long long[grammar_size];
-    grammar.toArrays(grammar_body, grammar_tail);
+    auto grammar_body = new unsigned char[grammar_size];
+    auto grammar_tail = new unsigned int[grammar_size];
+    grammar.toArrays8(grammar_body, grammar_tail);
 
     printf("Grammar:\n");
     for (size_t i = 0; i < grammar_size; i++) {
@@ -23,9 +23,9 @@ int main(int argc, char *argv[]) {
 
     Graph graph = Graph(argv[2]);
 
-    unsigned int ** matrix = new unsigned int*[graph.vertices_count];
+    unsigned char ** matrix = new unsigned char*[graph.vertices_count];
     for (unsigned int i = 0; i < graph.vertices_count; i++) {
-        matrix[i] = new unsigned int[graph.vertices_count]{0};
+        matrix[i] = new unsigned char[graph.vertices_count]{0};
     }
     graph.fillMatrix(matrix, grammar.get_nonterminal_from_terminal());
 
@@ -37,9 +37,8 @@ int main(int argc, char *argv[]) {
 //        printf("\n");
 //    }
 
-
-    unsigned int **mult_res = CutlassMatrix::MultMatrSquare(matrix, (int) graph.vertices_count, grammar_body,
-                                                                grammar_tail, grammar_size);
+    signed char **mult_res = CutlassMatrix8Bit::MultMatrSquare(matrix, (int) graph.vertices_count, grammar_body,
+                                                            grammar_tail, grammar_size);
     int sum = 0;
     for (unsigned int i = 0; i < graph.vertices_count; i++) {
         for (unsigned int j = 0; j < graph.vertices_count; j++) {

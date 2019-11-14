@@ -67,6 +67,13 @@ void Grammar::toArrays(unsigned int * grammar_body, unsigned long long * grammar
     }
 }
 
+void Grammar::toArrays8(unsigned char * grammar_body, unsigned int * grammar_tail) {
+    for (size_t i = 0; i < rules.size(); i++) {
+        grammar_body[i] = Matrix::toBoolVector8(rules[i].first);
+        grammar_tail[i] = (((unsigned int)Matrix::toBoolVector8(rules[i].second.first)) << 16) | (unsigned int)Matrix::toBoolVector8(rules[i].second.second);
+    }
+}
+
 const std::unordered_map<std::string, std::vector<int>>& Grammar::get_nonterminal_from_terminal() {
     return terminal_to_nonterminals;
 }
