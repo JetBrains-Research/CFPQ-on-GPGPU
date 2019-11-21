@@ -1,7 +1,7 @@
 //
 // Created by DmiitriyJarosh on 14.11.2019.
 //
-#if (!defined(__CUDA_ARCH__) || (__CUDA_ARCH__ >= 610))
+
 
 #define __CUDA_LIBDEVICE__
 #include <cuda_runtime_api.h>
@@ -27,6 +27,52 @@
 // Defines cutlass::gemm::Gemm, the generic Gemm computation template class.
 #include "cutlass/gemm/gemm.h"
 
+/// Kernel to initialize a matrix with small integers.
+__global__ void InitializeMatrix_kernel(
+        int8_t *matrix,
+        int ldm,
+        int rows,
+        int columns) {
+
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    int j = threadIdx.y + blockIdx.y * blockDim.y;
+
+    if (i < rows && j < columns) {
+        int offset = i + j * ldm;
+
+        matrix[offset] = 0;
+        if (i >= rows - 2 && j < 1) {
+            matrix[offset] = 0x0;
+        }
+        if (i < 1 && j >= columns - 2) {
+            matrix[offset] = 0x0;
+        }
+    }
+}
+
+__device__ bool * isChanged;
+
+__global__ void resetChanges(bool * isChangedGlobal) {
+    isChanged = isChangedGlobal;
+    *isChanged = false;
+}
+
+// Kernel for matrix sum and checking if they have changed
+__global__ void MatAddKernel(int8_t* A, int8_t* B, int8_t* C, int matDim){
+    int col = threadIdx.x + blockIdx.x * blockDim.x;
+    int row = threadIdx.y + blockIdx.y * blockDim.y;
+    int index = col + row * matDim;
+    if (col < matDim && row < matDim) {
+        C[index] = A[index] | B[index];
+        if (C[index] != B[index]) {
+            //printf("@@ ");
+            *isChanged = true;
+        }
+    }
+}
+
+
+#if (!defined(__CUDA_ARCH__) || (__CUDA_ARCH__ >= 610))
 // Defines cutlass::gemm::SgemmTraits, the structural components for single-precision GEMM
 #include "cutlass/gemm/igemm_traits.h"
 using namespace cutlass::gemm;
@@ -66,8 +112,8 @@ cudaError_t CutlassIGemm(
     // default template arguments. See `cutlass/gemm/gemm_traits.h` for more details.
     //
     typedef cutlass::gemm::IgemmTraitsBoolVector<
-            cutlass::MatrixLayout::kRowMajor,   // layout of A matrix
-            cutlass::MatrixLayout::kRowMajor,   // layout of B matrix
+            cutlass::MatrixLayout::kColumnMajor,   // layout of A matrix
+            cutlass::MatrixLayout::kColumnMajor,   // layout of B matrix
             cutlass::Shape<32, 128, 128>,
             int8_t
     > GemmTraits;
@@ -121,28 +167,7 @@ cudaError_t CutlassIGemm(
 //
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
-/// Kernel to initialize a matrix with small integers.
-__global__ void InitializeMatrix_kernel(
-        int8_t *matrix,
-        int ldm,
-        int rows,
-        int columns) {
 
-    int i = threadIdx.x + blockIdx.x * blockDim.x;
-    int j = threadIdx.y + blockIdx.y * blockDim.y;
-
-    if (i < rows && j < columns) {
-        int offset = i + j * ldm;
-
-        matrix[offset] = 0;
-        if (i >= rows - 2 && j < 1) {
-            matrix[offset] = 0x10;
-        }
-        if (i < 1 && j >= columns - 2) {
-            matrix[offset] = 0x01;
-        }
-    }
-}
 
 /// Simple function to initialize a matrix to arbitrary small integers.
 cudaError_t InitializeMatrix(int8_t *matrix, int ldm, int rows, int columns, int8_t * matrix_data = nullptr) {
@@ -200,26 +225,6 @@ cudaError_t AllocateMatrix(int8_t **matrix, int ldm, int rows, int columns, int8
     return result;
 }
 
-__device__ bool * isChanged;
-
-__global__ void resetChanges(bool * isChangedGlobal) {
-    isChanged = isChangedGlobal;
-    *isChanged = false;
-}
-
-// Kernel for matrix sum and checking if they have changed
-__global__ void MatAddKernel(int8_t* A, int8_t* B, int8_t* C, int matDim){
-    int col = threadIdx.x + blockIdx.x * blockDim.x;
-    int row = threadIdx.y + blockIdx.y * blockDim.y;
-    int index = col + row * matDim;
-    if (col < matDim && row < matDim) {
-        C[index] = A[index] | B[index];
-        if (C[index] != B[index]) {
-            *isChanged = true;
-        }
-    }
-}
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
 /// Allocate several matrices in GPU device memory and call a single-precision
@@ -273,11 +278,11 @@ int8_t * CutlassGemmSquare(
     dim3 dimGrid((int)ceil((double)dim / dimBlock.x), (int)ceil((double)dim / dimBlock.y));
 
     int8_t * host_cutlass = (int8_t *)calloc(ldc * dim, sizeof(int8_t));
-//    int8_t * A_r = (int8_t *)calloc(lda * dim, sizeof(int8_t));
 
     high_resolution_clock::time_point algorithm_begin_time = high_resolution_clock::now();
-
+    int i = 0;
     while(isChangedHost) {
+        i++;
         result = CutlassIGemm(dim, dim, dim, alpha, A, lda, A, lda, beta, C_cutlass, ldc);
 
         if (result != cudaSuccess) {
@@ -287,11 +292,9 @@ int8_t * CutlassGemmSquare(
             cudaFree(A);
             return nullptr;
         }
-
         resetChanges<<<1,1>>>(isChangedGlobal);
         MatAddKernel<<<dimGrid, dimBlock>>>(C_cutlass, A, C_cutlass, dim);
         cudaMemcpy(&isChangedHost, isChangedGlobal, sizeof(bool), cudaMemcpyDeviceToHost);
-
         result = cudaMemcpy(A, C_cutlass, sizeof_C, cudaMemcpyDeviceToDevice);
 
         if (result != cudaSuccess) {
@@ -303,6 +306,7 @@ int8_t * CutlassGemmSquare(
         }
     }
 
+    printf("Amount of multiplications: %d\n", i);
     high_resolution_clock::time_point algorithm_end_time = high_resolution_clock::now();
 
     result = cudaMemcpy(host_cutlass, C_cutlass, sizeof_C, cudaMemcpyDeviceToHost);
@@ -339,7 +343,7 @@ int8_t * CutlassGemmSquare(
 
 int8_t ** CutlassMatrix8Bit::MultMatrSquare(unsigned char ** A, int size, unsigned char * grammar_body, unsigned int * grammar_tail, int grammar_size) {
     // Scalars used for linear scaling the result of the matrix product.
-    unsigned int scalars[2] = { 1, 0 };
+    int8_t scalars[2] = { 1, 0 };
 
     int8_t * matrixA = new int8_t[size * size];
     for (int i = 0; i < size; i++) {
@@ -349,11 +353,11 @@ int8_t ** CutlassMatrix8Bit::MultMatrSquare(unsigned char ** A, int size, unsign
         }
     }
 
-    int8_t * global_device_grammar_body = nullptr;
+    unsigned char * global_device_grammar_body = nullptr;
     unsigned int * global_device_grammar_tail = nullptr;
 
     cudaError_t result;
-    result = cudaMalloc((void**)&global_device_grammar_body, grammar_size * sizeof(int8_t));
+    result = cudaMalloc((void**)&global_device_grammar_body, grammar_size * sizeof(unsigned char));
     if (result != cudaSuccess) {
         std::cerr << "Failed to malloc grammar body: "
                   << cudaGetErrorString(result) << std::endl;
@@ -365,7 +369,7 @@ int8_t ** CutlassMatrix8Bit::MultMatrSquare(unsigned char ** A, int size, unsign
                   << cudaGetErrorString(result) << std::endl;
         return nullptr;
     }
-    result = cudaMemcpy(global_device_grammar_body, grammar_body, grammar_size * sizeof(int8_t), cudaMemcpyHostToDevice);
+    result = cudaMemcpy(global_device_grammar_body, grammar_body, grammar_size * sizeof(unsigned char), cudaMemcpyHostToDevice);
     if (result != cudaSuccess) {
         std::cerr << "Failed to copy grammar body to device: "
                   << cudaGetErrorString(result) << std::endl;
@@ -378,7 +382,7 @@ int8_t ** CutlassMatrix8Bit::MultMatrSquare(unsigned char ** A, int size, unsign
         return nullptr;
     }
 
-    result = cudaMemcpyToSymbol(device_grammar_body, global_device_grammar_body, grammar_size * sizeof(int8_t));
+    result = cudaMemcpyToSymbol(device_grammar_body, global_device_grammar_body, grammar_size * sizeof(unsigned char));
     if (result != cudaSuccess) {
         std::cerr << "Failed to copy grammar body to __const__: "
                   << cudaGetErrorString(result) << std::endl;
@@ -414,6 +418,7 @@ int8_t ** CutlassMatrix8Bit::MultMatrSquare(unsigned char ** A, int size, unsign
         output[i] = new int8_t[size];
     }
 
+
     for (unsigned int i = 0; i < size; i++) {
         for (unsigned int j = 0; j < size; j++) {
             output[i][j] = res[i + j * size];
@@ -422,5 +427,4 @@ int8_t ** CutlassMatrix8Bit::MultMatrSquare(unsigned char ** A, int size, unsign
 
     return output;
 }
-
 #endif

@@ -23,9 +23,11 @@ int main(int argc, char *argv[]) {
 
     Graph graph = Graph(argv[2]);
 
-    unsigned char ** matrix = new unsigned char*[graph.vertices_count];
-    for (unsigned int i = 0; i < graph.vertices_count; i++) {
-        matrix[i] = new unsigned char[graph.vertices_count]{0};
+    // we need matrix with dim which is divided by 4 according to our multiplication
+    unsigned int matrixDim = graph.vertices_count % 4 == 0 ? graph.vertices_count : 4 * (graph.vertices_count / 4 + 1);
+    unsigned char ** matrix = new unsigned char*[matrixDim];
+    for (unsigned int i = 0; i < matrixDim; i++) {
+        matrix[i] = new unsigned char[matrixDim]{0};
     }
     graph.fillMatrix(matrix, grammar.get_nonterminal_from_terminal());
 
@@ -37,7 +39,7 @@ int main(int argc, char *argv[]) {
 //        printf("\n");
 //    }
 
-    signed char **mult_res = CutlassMatrix8Bit::MultMatrSquare(matrix, (int) graph.vertices_count, grammar_body,
+    signed char **mult_res = CutlassMatrix8Bit::MultMatrSquare(matrix, (int) matrixDim, grammar_body,
                                                             grammar_tail, grammar_size);
     int sum = 0;
     for (unsigned int i = 0; i < graph.vertices_count; i++) {

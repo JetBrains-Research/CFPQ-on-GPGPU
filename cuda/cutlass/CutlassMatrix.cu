@@ -286,7 +286,10 @@ unsigned int * CutlassGemmSquare(
 
     high_resolution_clock::time_point algorithm_begin_time = high_resolution_clock::now();
 
+    int i = 0;
+    
     while(isChangedHost) {
+        i++;
         result = CutlassSGemmNN(dim, dim, dim, alpha, A, lda, A, lda, beta, C_cutlass, ldc);
 
         if (result != cudaSuccess) {
@@ -311,6 +314,7 @@ unsigned int * CutlassGemmSquare(
             return nullptr;
         }
     }
+    printf("Amount of multiplications: %d\n", i);
 
     high_resolution_clock::time_point algorithm_end_time = high_resolution_clock::now();
 

@@ -7,6 +7,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(CMAKE_CXX_STANDARD 11)
 
+string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61")
+
 include_directories(${CMAKE_SOURCE_DIR}/cfpq-cpp)
 
 add_executable(naiveGPU
