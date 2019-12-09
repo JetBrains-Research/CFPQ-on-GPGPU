@@ -81,6 +81,10 @@ public:
     }
 
     void print_results(const std::string &output_filename);
+    unsigned int get_rules_size();
+    const std::unordered_map<std::string, std::vector<int>>& get_nonterminal_from_terminal();
+    void toArrays(unsigned int * grammar_body, unsigned long long * grammar_tail);
+    void toArrays8(unsigned char *grammar_body, unsigned int *grammar_tail);
 
 private:
     unsigned int nonterminals_count = 0;

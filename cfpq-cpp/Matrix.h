@@ -15,6 +15,14 @@ public:
     virtual unsigned int get_bit(unsigned int row, unsigned col) = 0;
 
     virtual bool add_mul(Matrix *left, Matrix *right) = 0;
+
+    static unsigned int toBoolVector(unsigned int number) {
+        return ((unsigned int)0x1) << number;
+    }
+
+    static unsigned char toBoolVector8(unsigned int number) {
+        return ((unsigned char)0x1) << number;
+    }
 };
 
 class MatricesEnv {

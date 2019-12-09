@@ -7,6 +7,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3")
 
 set(CMAKE_CXX_STANDARD 11)
 
+string(APPEND CMAKE_CUDA_FLAGS " -gencode arch=compute_61,code=sm_61")
+
 include_directories(${CMAKE_SOURCE_DIR}/cfpq-cpp)
 
 add_executable(naiveGPU
@@ -28,6 +30,18 @@ add_executable(naiveGPU-shared
         cuda/naive-gpu-shared/main.cpp
         cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
         )
+
+add_executable(cutlassGPU
+        cuda/cutlass/main.cpp
+        cuda/cutlass/CutlassMatrix.cu
+        cuda/cutlass/CutlassMatrix.h
+        cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
+        )
+
+add_executable(cutlassGPU8
+        cuda/cutlass8/main.cpp
+        cfpq-cpp/Grammar.cpp cfpq-cpp/Grammar.h cfpq-cpp/Graph.cpp cfpq-cpp/Graph.h cfpq-cpp/Matrix.h
+        cuda/cutlass8/CutlassMatrix8Bit.cu cuda/cutlass8/CutlassMatrix8Bit.h)
 
 add_executable(m4riGPU
         cuda/methodOf4RusBooleanSemiringGpu/methodOf4RusBooleanSemiringGpu.cu
