@@ -40,4 +40,5 @@ RUN apt-get install m4 && \
 RUN mkdir work
 WORKDIR /work
 
-CMD ["python", "testing_system.py", "tests.csv"]
+ENTRYPOINT ["python"]
+
